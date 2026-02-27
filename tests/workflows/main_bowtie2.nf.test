@@ -1,0 +1,43 @@
+/*
+ * Workflow tests for main_bowtie2.nf using nf-core test data (sarscov2 genome).
+ */
+nextflow_workflow {
+    name "Test workflow main_bowtie2"
+    script "../../main_bowtie2.nf"
+    workflow "BOWTIE2_INDEX_MAIN"
+    config "../config/nextflow.config"
+
+    tag "index"
+    tag "bowtie2"
+
+    test("Bowtie2 index with nf-core sarscov2 genome - stub") {
+        tag "stub"
+        options "-stub"
+
+        when {
+            params {
+                fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.fasta'
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert snapshot(workflow.trace.succeeded().size()).match()
+        }
+    }
+
+    test("Bowtie2 index with nf-core sarscov2 genome") {
+        when {
+            params {
+                fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.fasta'
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.trace.succeeded().size() >= 1
+        }
+    }
+}

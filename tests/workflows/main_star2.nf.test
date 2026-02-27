@@ -1,0 +1,30 @@
+/*
+ * Workflow tests for main_star2.nf (alias for STAR 2.x); same inputs as main_star.nf.
+ */
+nextflow_workflow {
+    name "Test workflow main_star2"
+    script "../../main_star2.nf"
+    workflow "STAR2_INDEX_MAIN"
+    config "../config/nextflow.config"
+
+    tag "index"
+    tag "star"
+    tag "star2"
+
+    test("STAR2 index with nf-core homo_sapiens genome and GTF - stub") {
+        tag "stub"
+        options "-stub"
+
+        when {
+            params {
+                fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/genome/genome.fasta'
+                gtf   = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/homo_sapiens/genome/genome.gtf'
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+}

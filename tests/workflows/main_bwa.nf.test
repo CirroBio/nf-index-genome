@@ -1,0 +1,42 @@
+/*
+ * Workflow tests for main_bwa.nf using nf-core test data (sarscov2 genome).
+ */
+nextflow_workflow {
+    name "Test workflow main_bwa"
+    script "../../main_bwa.nf"
+    workflow "BWA_INDEX_MAIN"
+    config "../config/nextflow.config"
+
+    tag "index"
+    tag "bwa"
+
+    test("BWA index with nf-core sarscov2 genome - stub") {
+        tag "stub"
+        options "-stub"
+
+        when {
+            params {
+                fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.fasta'
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+        }
+    }
+
+    test("BWA index with nf-core sarscov2 genome") {
+        when {
+            params {
+                fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.fasta'
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.trace.succeeded().size() >= 1
+        }
+    }
+}
