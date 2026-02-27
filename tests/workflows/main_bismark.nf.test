@@ -4,7 +4,6 @@
 nextflow_workflow {
     name "Test workflow main_bismark"
     script "../../main_bismark.nf"
-    workflow "BISMARK_INDEX_MAIN"
     config "../config/nextflow.config"
 
     tag "index"

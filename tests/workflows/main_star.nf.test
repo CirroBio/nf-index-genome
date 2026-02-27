@@ -4,7 +4,6 @@
 nextflow_workflow {
     name "Test workflow main_star"
     script "../../main_star.nf"
-    workflow "STAR_INDEX_MAIN"
     config "../config/nextflow.config"
 
     tag "index"

@@ -5,7 +5,8 @@
 
 include { STAR_INDEX } from './workflows/star.nf'
 
-workflow STAR2_INDEX_MAIN {
+workflow {
+    main:
     if (!params.fasta) {
         exit 1, "Required parameter: --fasta (genome FASTA file)"
     }
@@ -13,7 +14,13 @@ workflow STAR2_INDEX_MAIN {
         exit 1, "Required parameter: --gtf (gene annotation GTF for splice-aware index)"
     }
     STAR_INDEX()
-    STAR_INDEX.out.index
-        .publishDir(params.outdir, mode: 'copy')
+
+    output:
+        index = STAR_INDEX.out.index
 }
-workflow { STAR2_INDEX_MAIN() }
+
+output {
+    index {
+        path "${params.outdir}"
+    }
+}

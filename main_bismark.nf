@@ -5,12 +5,19 @@
 
 include { BISMARK_INDEX } from './workflows/bismark.nf'
 
-workflow BISMARK_INDEX_MAIN {
+workflow {
+    main:
     if (!params.fasta) {
         exit 1, "Required parameter: --fasta (genome FASTA file)"
     }
     BISMARK_INDEX()
-    BISMARK_INDEX.out.index
-        .publishDir(params.outdir, mode: 'copy')
+
+    output:
+        index = BISMARK_INDEX.out.index
 }
-workflow { BISMARK_INDEX_MAIN() }
+
+output {
+    index {
+        path "${params.outdir}"
+    }
+}

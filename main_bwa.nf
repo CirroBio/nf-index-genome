@@ -5,12 +5,19 @@
 
 include { BWA_INDEX_WORKFLOW } from './workflows/bwa.nf'
 
-workflow BWA_INDEX_MAIN {
+workflow {
+    main:
     if (!params.fasta) {
         exit 1, "Required parameter: --fasta (genome FASTA file)"
     }
     BWA_INDEX_WORKFLOW()
-    BWA_INDEX_WORKFLOW.out.index
-        .publishDir(params.outdir, mode: 'copy')
+
+    output:
+        index = BWA_INDEX_WORKFLOW.out.index
 }
-workflow { BWA_INDEX_MAIN() }
+
+output {
+    index {
+        path "${params.outdir}"
+    }
+}

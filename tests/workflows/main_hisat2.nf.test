@@ -4,7 +4,6 @@
 nextflow_workflow {
     name "Test workflow main_hisat2"
     script "../../main_hisat2.nf"
-    workflow "HISAT2_INDEX_MAIN"
     config "../config/nextflow.config"
 
     tag "index"

@@ -5,12 +5,19 @@
 
 include { HISAT2_INDEX } from './workflows/hisat2.nf'
 
-workflow HISAT2_INDEX_MAIN {
+workflow {
+    main:
     if (!params.fasta) {
         exit 1, "Required parameter: --fasta (genome FASTA file)"
     }
     HISAT2_INDEX()
-    HISAT2_INDEX.out.index
-        .publishDir(params.outdir, mode: 'copy')
+
+    output:
+        index = HISAT2_INDEX.out.index
 }
-workflow { HISAT2_INDEX_MAIN() }
+
+output {
+    index {
+        path "${params.outdir}"
+    }
+}

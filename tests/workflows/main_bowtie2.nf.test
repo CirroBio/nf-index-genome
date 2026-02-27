@@ -4,7 +4,6 @@
 nextflow_workflow {
     name "Test workflow main_bowtie2"
     script "../../main_bowtie2.nf"
-    workflow "BOWTIE2_INDEX_MAIN"
     config "../config/nextflow.config"
 
     tag "index"

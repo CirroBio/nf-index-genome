@@ -4,7 +4,6 @@
 nextflow_workflow {
     name "Test workflow main_bwa"
     script "../../main_bwa.nf"
-    workflow "BWA_INDEX_MAIN"
     config "../config/nextflow.config"
 
     tag "index"
