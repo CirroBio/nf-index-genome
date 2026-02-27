@@ -3,6 +3,7 @@
  * Usage: nextflow run main_hisat2.nf --fasta /path/to/genome.fa [--gtf genes.gtf] [--splicesites ss.txt] [--outdir ./results]
  */
 
+nextflow.preview.output = true
 include { HISAT2_INDEX } from './workflows/hisat2.nf'
 
 workflow {

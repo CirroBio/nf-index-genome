@@ -3,6 +3,7 @@
  * Usage: nextflow run main_bowtie2.nf --fasta /path/to/genome.fa [--outdir ./results]
  */
 
+nextflow.preview.output = true
 include { BOWTIE2_INDEX } from './workflows/bowtie2.nf'
 
 workflow {

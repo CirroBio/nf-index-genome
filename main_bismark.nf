@@ -3,6 +3,7 @@
  * Usage: nextflow run main_bismark.nf --fasta /path/to/genome.fa [--outdir ./results]
  */
 
+nextflow.preview.output = true
 include { BISMARK_INDEX } from './workflows/bismark.nf'
 
 workflow {

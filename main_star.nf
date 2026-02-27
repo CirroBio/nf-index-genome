@@ -3,6 +3,7 @@
  * Usage: nextflow run main_star.nf --fasta /path/to/genome.fa --gtf /path/to/genes.gtf [--outdir ./results]
  */
 
+nextflow.preview.output = true
 include { STAR_INDEX } from './workflows/star.nf'
 
 workflow {

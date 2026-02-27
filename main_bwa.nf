@@ -3,6 +3,7 @@
  * Usage: nextflow run main_bwa.nf --fasta /path/to/genome.fa [--outdir ./results]
  */
 
+nextflow.preview.output = true
 include { BWA_INDEX_WORKFLOW } from './workflows/bwa.nf'
 
 workflow {
