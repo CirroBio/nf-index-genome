@@ -12,7 +12,7 @@ workflow {
     }
     BOWTIE2_INDEX()
 
-    output:
+    publish:
         index = BOWTIE2_INDEX.out.index
 }
 

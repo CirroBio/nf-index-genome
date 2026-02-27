@@ -12,7 +12,7 @@ workflow {
     }
     BISMARK_INDEX()
 
-    output:
+    publish:
         index = BISMARK_INDEX.out.index
 }
 

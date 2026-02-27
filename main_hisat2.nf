@@ -12,7 +12,7 @@ workflow {
     }
     HISAT2_INDEX()
 
-    output:
+    publish:
         index = HISAT2_INDEX.out.index
 }
 

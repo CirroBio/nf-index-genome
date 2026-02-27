@@ -12,7 +12,7 @@ workflow {
     }
     BWA_INDEX_WORKFLOW()
 
-    output:
+    publish:
         index = BWA_INDEX_WORKFLOW.out.index
 }
 

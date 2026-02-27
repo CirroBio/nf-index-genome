@@ -15,7 +15,7 @@ workflow {
     }
     STAR_INDEX()
 
-    output:
+    publish:
         index = STAR_INDEX.out.index
 }
 
