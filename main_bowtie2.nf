@@ -5,12 +5,19 @@
 
 include { BOWTIE2_INDEX } from './workflows/bowtie2.nf'
 
-workflow BOWTIE2_INDEX_MAIN {
+workflow {
+    main:
     if (!params.fasta) {
         exit 1, "Required parameter: --fasta (genome FASTA file)"
     }
     BOWTIE2_INDEX()
-    BOWTIE2_INDEX.out.index
-        .publishDir(params.outdir, mode: 'copy')
+
+    output:
+        index = BOWTIE2_INDEX.out.index
 }
-workflow { BOWTIE2_INDEX_MAIN() }
+
+output {
+    index {
+        path "${params.outdir}"
+    }
+}
