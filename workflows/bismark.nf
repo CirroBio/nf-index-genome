@@ -8,7 +8,7 @@ include { BISMARK_GENOMEPREPARATION } from '../modules/nf-core/modules/bismark/g
 workflow BISMARK_INDEX {
     main:
         // Bismark expects genome fasta in a directory; stage fasta into a dir for the module
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true).first()
+        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true))
         ch_meta  = Channel.from([ [ id: 'genome' ] ])
         ch_input = ch_meta.combine(ch_fasta)
 

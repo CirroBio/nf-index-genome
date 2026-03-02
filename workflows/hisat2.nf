@@ -25,7 +25,7 @@ process CREATE_PLACEHOLDER_SS {
 
 workflow HISAT2_INDEX {
     main:
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true).first()
+        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true))
         ch_meta  = Channel.from([ [ id: 'genome' ] ])
         ch_meta2 = Channel.from([ [ id: 'genome' ] ])
         ch_meta3 = Channel.from([ [ id: 'genome' ] ])
@@ -34,10 +34,10 @@ workflow HISAT2_INDEX {
         CREATE_PLACEHOLDER_SS()
 
         ch_gtf = params.gtf
-            ? Channel.fromPath(params.gtf, checkIfExists: true).first()
+            ? Channel.fromPath(params.gtf, checkIfExists: true))
             : CREATE_PLACEHOLDER_GTF.out
         ch_ss = params.splicesites
-            ? Channel.fromPath(params.splicesites, checkIfExists: true).first()
+            ? Channel.fromPath(params.splicesites, checkIfExists: true))
             : CREATE_PLACEHOLDER_SS.out
 
         ch_input_fasta = ch_meta.combine(ch_fasta)

@@ -6,7 +6,7 @@ include { BWA_INDEX } from '../modules/nf-core/modules/bwa/index/main.nf'
 
 workflow BWA_INDEX_WORKFLOW {
     main:
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true).first()
+        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true))
         ch_meta  = Channel.from([ [ id: 'genome' ] ])
         ch_input = ch_meta.combine(ch_fasta)
 

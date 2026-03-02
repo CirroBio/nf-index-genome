@@ -7,10 +7,10 @@ include { STAR_GENOMEGENERATE } from '../modules/nf-core/modules/star/genomegene
 
 workflow STAR_INDEX {
     main:
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true).first()
+        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true))
         ch_meta  = Channel.from([ [ id: 'genome' ] ])
         ch_gtf   = params.gtf
-            ? Channel.fromPath(params.gtf, checkIfExists: true).first()
+            ? Channel.fromPath(params.gtf, checkIfExists: true))
             : Channel.from(null)
         ch_meta2 = Channel.from([ [ id: 'genome' ] ])
 

@@ -6,7 +6,7 @@ include { BOWTIE2_BUILD } from '../modules/nf-core/modules/bowtie2/build/main.nf
 
 workflow BOWTIE2_INDEX {
     main:
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true).first()
+        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
         ch_meta  = Channel.from([ [ id: 'genome' ] ])
         ch_input = ch_meta.combine(ch_fasta)
 
