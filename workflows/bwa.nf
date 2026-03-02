@@ -2,7 +2,7 @@
  * BWA genome index workflow using nf-core bwa/index module
  */
 
-include { BWA_INDEX } from '../modules/nf-core/modules/bwa/index/main.nf'
+include { BWA_INDEX } from '../modules/bwa_index.nf'
 
 workflow BWA_INDEX_WORKFLOW {
     main:

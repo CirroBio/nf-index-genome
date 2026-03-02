@@ -3,7 +3,7 @@
  * Supports STAR 2.x. GTF is optional but recommended for splice-aware indexing.
  */
 
-include { STAR_GENOMEGENERATE } from '../modules/nf-core/modules/star/genomegenerate/main.nf'
+include { STAR_GENOMEGENERATE } from '../modules/star_genomegenerate.nf'
 
 workflow STAR_INDEX {
     main:

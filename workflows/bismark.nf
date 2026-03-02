@@ -3,7 +3,7 @@
  * Prepares bisulfite-converted genome indexes (uses Bowtie2 under the hood).
  */
 
-include { BISMARK_GENOMEPREPARATION } from '../modules/nf-core/modules/bismark/genomepreparation/main.nf'
+include { BISMARK_GENOMEPREPARATION } from '../modules/bismark_genomepreparation.nf'
 
 workflow BISMARK_INDEX {
     main:

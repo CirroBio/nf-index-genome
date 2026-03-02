@@ -2,7 +2,7 @@
  * Bowtie2 genome index workflow using nf-core bowtie2/build module
  */
 
-include { BOWTIE2_BUILD } from '../modules/nf-core/modules/bowtie2/build/main.nf'
+include { BOWTIE2_BUILD } from '../modules/bowtie2_build.nf'
 
 workflow BOWTIE2_INDEX {
     main:

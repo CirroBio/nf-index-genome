@@ -3,7 +3,7 @@
  * GTF and splice sites are optional; use for splice-aware RNA index.
  */
 
-include { HISAT2_BUILD } from '../modules/nf-core/modules/hisat2/build/main.nf'
+include { HISAT2_BUILD } from '../modules/hisat2_build.nf'
 
 // When GTF or splice sites are not provided, we need placeholder files (module requires path inputs)
 process CREATE_PLACEHOLDER_GTF {
