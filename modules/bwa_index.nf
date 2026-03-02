@@ -1,33 +1,17 @@
 process BWA_INDEX {
     tag "$fasta"
-    memory { 6.B * fasta.size() }
 
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/d7/d7e24dc1e4d93ca4d3a76a78d4c834a7be3985b0e1e56fddd61662e047863a8a/data' :
-        'community.wave.seqera.io/library/bwa_htslib_samtools:83b50ff84ead50d0' }"
+    container "${params.container}"
 
     input:
-    tuple val(meta), path(fasta)
+    path fasta
 
     output:
-    tuple val(meta), path("bwa"), emit: index
-    tuple val("${task.process}"), val('bwa'), eval('bwa 2>&1 | sed -n "s/^Version: //p"'), topic: versions, emit: versions_bwa
-
-    when:
-    task.ext.when == null || task.ext.when
+    path "*"
 
     script:
-    def prefix = task.ext.prefix ?: "${fasta.baseName}"
-    def args = task.ext.args ?: ''
     """
-    mkdir bwa
-    bwa index $args -p bwa/${prefix} $fasta
-    """
-
-    stub:
-    def prefix = task.ext.prefix ?: "${fasta.baseName}"
-    """
-    mkdir bwa
-    touch bwa/${prefix}.amb bwa/${prefix}.ann bwa/${prefix}.bwt bwa/${prefix}.pac bwa/${prefix}.sa
+    bwa index -p ${fasta.baseName} $fasta
+    bwa --version 2>&1 > versions.txt
     """
 }

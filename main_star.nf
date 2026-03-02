@@ -12,5 +12,11 @@ workflow {
     if (!params.gtf) {
         exit 1, "Required parameter: --gtf (gene annotation GTF for splice-aware index)"
     }
+    if (!params.outdir) {
+        exit 1, "Required parameter: --outdir (output directory)"
+    }
+    if (!params.container) {
+        exit 1, "Required parameter: --container (STAR container image)"
+    }
     STAR_INDEX()
 }

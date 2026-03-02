@@ -9,5 +9,11 @@ workflow {
     if (!params.fasta) {
         exit 1, "Required parameter: --fasta (genome FASTA file)"
     }
+    if (!params.outdir) {
+        exit 1, "Required parameter: --outdir (output directory)"
+    }
+    if (!params.container) {
+        exit 1, "Required parameter: --container (Bismark container image)"
+    }
     BISMARK_INDEX()
 }
