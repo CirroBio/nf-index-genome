@@ -107,7 +107,6 @@ Test data URLs are defined in `tests/config/test_data.config`.
 - `modules/nf-core/modules/` – nf-core modules (created by `install_modules.sh`).
 - `tests/config/` – Test config and nf-core test data URLs.
 - `tests/workflows/` – nf-test workflow tests (one `*.nf.test` per entrypoint).
-- `conf/base.config` – Process defaults (CPU, memory, time).
 
 ## License
 
