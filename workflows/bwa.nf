@@ -5,22 +5,7 @@
 include { BWA_INDEX } from '../modules/bwa_index.nf'
 
 workflow BWA_INDEX_WORKFLOW {
-    main:
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true))
-        ch_meta  = Channel.from([ [ id: 'genome' ] ])
-        ch_input = ch_meta.combine(ch_fasta)
+    ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
 
-        BWA_INDEX(ch_input)
-
-        BWA_INDEX.out.index
-            .map { meta, index_dir -> [ meta, index_dir ] }
-            .set { ch_index }
-
-        ch_index
-            .collect()
-            .map { tuples -> tuples[0][1] }
-            .set { ch_index_out }
-
-    emit:
-        index = ch_index_out
+    BWA_INDEX(ch_fasta)
 }

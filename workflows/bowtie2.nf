@@ -5,22 +5,7 @@
 include { BOWTIE2_BUILD } from '../modules/bowtie2_build.nf'
 
 workflow BOWTIE2_INDEX {
-    main:
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
-        ch_meta  = Channel.from([ [ id: 'genome' ] ])
-        ch_input = ch_meta.combine(ch_fasta)
+    ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
 
-        BOWTIE2_BUILD(ch_input)
-
-        BOWTIE2_BUILD.out.index
-            .map { meta, index_dir -> [ meta, index_dir ] }
-            .set { ch_index }
-
-        ch_index
-            .collect()
-            .map { tuples -> tuples[0][1] }
-            .set { ch_index_out }
-
-    emit:
-        index = ch_index_out
+    BOWTIE2_BUILD(ch_fasta)
 }

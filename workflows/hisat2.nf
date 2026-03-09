@@ -24,37 +24,9 @@ process CREATE_PLACEHOLDER_SS {
 }
 
 workflow HISAT2_INDEX {
-    main:
-        ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true))
-        ch_meta  = Channel.from([ [ id: 'genome' ] ])
-        ch_meta2 = Channel.from([ [ id: 'genome' ] ])
-        ch_meta3 = Channel.from([ [ id: 'genome' ] ])
+    ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
+    ch_gtf = params.gtf ? Channel.fromPath(params.gtf, checkIfExists: true) : CREATE_PLACEHOLDER_GTF.out
+    ch_ss = params.splicesites ? Channel.fromPath(params.splicesites, checkIfExists: true) : CREATE_PLACEHOLDER_SS.out
 
-        CREATE_PLACEHOLDER_GTF()
-        CREATE_PLACEHOLDER_SS()
-
-        ch_gtf = params.gtf
-            ? Channel.fromPath(params.gtf, checkIfExists: true))
-            : CREATE_PLACEHOLDER_GTF.out
-        ch_ss = params.splicesites
-            ? Channel.fromPath(params.splicesites, checkIfExists: true))
-            : CREATE_PLACEHOLDER_SS.out
-
-        ch_input_fasta = ch_meta.combine(ch_fasta)
-        ch_input_gtf   = ch_meta2.combine(ch_gtf)
-        ch_input_ss    = ch_meta3.combine(ch_ss)
-
-        HISAT2_BUILD(ch_input_fasta, ch_input_gtf, ch_input_ss)
-
-        HISAT2_BUILD.out.index
-            .map { meta, index_dir -> [ meta, index_dir ] }
-            .set { ch_index }
-
-        ch_index
-            .collect()
-            .map { tuples -> tuples[0][1] }
-            .set { ch_index_out }
-
-    emit:
-        index = ch_index_out
+    HISAT2_BUILD(ch_fasta, ch_gtf, ch_ss)
 }
