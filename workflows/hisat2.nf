@@ -24,11 +24,18 @@ process CREATE_PLACEHOLDER_SS {
 }
 
 workflow HISAT2_INDEX {
-    CREATE_PLACEHOLDER_GTF()
-    CREATE_PLACEHOLDER_SS()
+    if (params.gtf) {
+        ch_gtf = Channel.fromPath(params.gtf, checkIfExists: true)
+    } else {
+        CREATE_PLACEHOLDER_GTF()
+        ch_gtf = CREATE_PLACEHOLDER_GTF.out
+    }
+    if (params.splicesites) {
+        ch_ss = Channel.fromPath(params.splicesites, checkIfExists: true)
+    } else {
+        CREATE_PLACEHOLDER_SS()
+        ch_ss = CREATE_PLACEHOLDER_SS.out
+    }
     ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
-    ch_gtf = params.gtf ? Channel.fromPath(params.gtf, checkIfExists: true) : CREATE_PLACEHOLDER_GTF.out
-    ch_ss = params.splicesites ? Channel.fromPath(params.splicesites, checkIfExists: true) : CREATE_PLACEHOLDER_SS.out
-
     HISAT2_BUILD(ch_fasta, ch_gtf, ch_ss)
 }
