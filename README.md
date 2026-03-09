@@ -8,7 +8,6 @@ Utilities for building genome indices using [nf-core/modules](https://github.com
 |-----------|--------------------|-------------|
 | **Bowtie2** | `main_bowtie2.nf`  | Bowtie2 genome index (`.bt2`) |
 | **STAR**    | `main_star.nf`     | STAR genome index (splice-aware with GTF) |
-| **STAR 2**  | `main_star2.nf`    | Alias for STAR 2.x (same as `main_star.nf`) |
 | **Bismark** | `main_bismark.nf`  | Bismark bisulfite genome preparation |
 | **BWA**     | `main_bwa.nf`      | BWA genome index |
 | **HISAT2**  | `main_hisat2.nf`   | HISAT2 genome index (optional GTF/splice sites for RNA) |
@@ -30,7 +29,7 @@ Common options (all workflows):
 
 - `--fasta` – (required) Path to reference genome FASTA.
 - `--outdir` – Output directory (default: `./results`).
-- `--gtf` – (required for STAR/STAR2; optional for HISAT2) Gene annotation GTF.
+- `--gtf` – (required for STAR; optional for HISAT2) Gene annotation GTF.
 - `--splicesites` – (optional, HISAT2 only) Splice sites file.
 
 ### Examples
@@ -41,9 +40,6 @@ nextflow run main_bowtie2.nf --fasta genome.fa --outdir results/bowtie2
 
 # STAR index (GTF required for splice-aware index)
 nextflow run main_star.nf --fasta genome.fa --gtf genes.gtf --outdir results/star
-
-# STAR 2 (same as above)
-nextflow run main_star2.nf --fasta genome.fa --gtf genes.gtf --outdir results/star2
 
 # Bismark genome preparation
 nextflow run main_bismark.nf --fasta genome.fa --outdir results/bismark
