@@ -10,9 +10,7 @@ process BISMARK_GENOMEPREPARATION {
     path "*"
 
     script:
-    def slam_flag = params.slam ? "--slam" : ""
-    def single_fasta_flag = params.single_fasta ? "--single_fasta" : ""
-    def large_index_flag = params.large_index ? "--large-index" : ""
+    def extra_args = params.bismark_extra_args ?: ""
     """#!/bin/bash
 set -euo pipefail
 
@@ -20,10 +18,8 @@ bismark_genome_preparation \
     --${params.aligner} \
     --parallel ${task.cpus} \
     --genomic_composition \
-    $slam_flag \
-    $single_fasta_flag \
-    $large_index_flag \
-    genome/
+    $extra_args \
+    ./
 
 bismark_genome_preparation --version 2>&1 > versions.txt
     """

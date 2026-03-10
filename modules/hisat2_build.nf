@@ -12,8 +12,9 @@ process HISAT2_BUILD {
     path "*"
 
     script:
+    def extra_args = params.hisat2_extra_args ?: ""
     """
-    hisat2-build -p ${task.cpus} --ss ${splicesites} --exon ${gtf} ${fasta} ${fasta.baseName}
+    hisat2-build -p ${task.cpus} --ss ${splicesites} --exon ${gtf} $extra_args ${fasta} genome
     hisat2 --version 2>&1 > versions.txt
     """
 }
