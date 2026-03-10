@@ -13,7 +13,7 @@ process HISAT2_BUILD {
 
     script:
     """
-    hisat2-build -p ${task.cpus} ${ss} ${exon} ${args} ${fasta} ${fasta.baseName}
+    hisat2-build -p ${task.cpus} --ss ${splicesites} --exon ${gtf} ${fasta} ${fasta.baseName}
     hisat2 --version 2>&1 > versions.txt
     """
 }
