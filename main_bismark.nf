@@ -15,5 +15,8 @@ workflow {
     if (!params.container) {
         exit 1, "Required parameter: --container (Bismark container image)"
     }
+    if (!params.aligner) {
+        exit 1, "Required parameter: --aligner (aligner to use)"
+    }
     BISMARK_INDEX()
 }
