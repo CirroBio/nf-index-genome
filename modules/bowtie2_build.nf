@@ -12,7 +12,7 @@ process BOWTIE2_BUILD {
 
     script:
     """
-    bowtie2-build $args --threads $task.cpus $fasta ${fasta.baseName}
+    bowtie2-build --threads $task.cpus $fasta ${fasta.baseName}
     bowtie2 --version 2>&1 > versions.txt
     """
 }
