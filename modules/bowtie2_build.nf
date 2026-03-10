@@ -1,6 +1,5 @@
 process BOWTIE2_BUILD {
     tag "$fasta"
-    label 'process_high'
 
     container "${params.container}"
 

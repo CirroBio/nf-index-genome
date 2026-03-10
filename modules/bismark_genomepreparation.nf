@@ -1,6 +1,5 @@
 process BISMARK_GENOMEPREPARATION {
     tag "$fasta"
-    label 'process_high'
 
     container "${params.container}"
 

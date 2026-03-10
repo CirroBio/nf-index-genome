@@ -1,7 +1,5 @@
 process HISAT2_BUILD {
     tag "${fasta}"
-    label 'process_high'
-    label 'process_high_memory'
 
     container "${params.container}"
 

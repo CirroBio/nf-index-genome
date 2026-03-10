@@ -1,6 +1,5 @@
 process STAR_GENOMEGENERATE {
     tag "$fasta"
-    label 'process_high'
 
     container "${params.container}"
 
