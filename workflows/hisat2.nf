@@ -7,6 +7,7 @@ include { HISAT2_BUILD } from '../modules/hisat2_build.nf'
 
 // When GTF or splice sites are not provided, we need placeholder files (module requires path inputs)
 process CREATE_PLACEHOLDER_GTF {
+    container "ubuntu:20.04"
     output:
         path('empty.gtf')
     script:
@@ -15,6 +16,7 @@ process CREATE_PLACEHOLDER_GTF {
         'touch empty.gtf'
 }
 process CREATE_PLACEHOLDER_SS {
+    container "ubuntu:20.04"
     output:
         path('empty.ss')
     script:
