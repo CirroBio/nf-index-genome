@@ -12,6 +12,6 @@ process BWA_INDEX {
     script:
     """
     bwa index -p ${fasta.baseName} $fasta
-    bwa --version 2>&1 > versions.txt
+    bwa 2>&1 | head -4 | tail -n 3 > versions.txt
     """
 }
