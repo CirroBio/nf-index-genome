@@ -51,7 +51,10 @@ process HISAT2_EXTRACT_SPLICE_SITES {
     output:
         path('splice_sites.ss')
     script:
-        'hisat2_extract_splice_sites.py ${gtf} > splice_sites.ss'
+        """#!/bin/bash
+set -e
+hisat2_extract_splice_sites.py ${gtf} > splice_sites.ss
+        """
     stub:
         'touch splice_sites.ss'
 }
@@ -64,8 +67,7 @@ process HISAT2_EXTRACT_EXONS {
         path('exons.exon')
     script:
         """#!/bin/bash
-set -euo pipefail
-
+set -e
 hisat2_extract_exons.py ${gtf} > exons.exon
         """
     stub:
