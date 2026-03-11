@@ -63,7 +63,11 @@ process HISAT2_EXTRACT_EXONS {
     output:
         path('exons.exon')
     script:
-        'hisat2_extract_exons.py ${gtf} > exons.exon'
+        """#!/bin/bash
+set -euo pipefail
+
+hisat2_extract_exons.py ${gtf} > exons.exon
+        """
     stub:
         'touch exons.exon'
 }
