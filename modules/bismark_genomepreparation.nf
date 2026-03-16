@@ -19,7 +19,7 @@ bismark_genome_preparation \
     --parallel ${task.cpus} \
     --genomic_composition \
     $extra_args \
-    genome/ 2>&1 > bismark_genome_preparation.log
+    genome/ 2>&1 | tee bismark_genome_preparation.log
 
 bismark_genome_preparation --version 2>&1 > versions.txt
     """

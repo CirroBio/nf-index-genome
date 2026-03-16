@@ -13,7 +13,7 @@ process STAR_GENOMEGENERATE {
     script:
     def extra_args = params.star_extra_args ?: ""
     """
-    STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta --sjdbGTFfile $gtf --runThreadN $task.cpus $extra_args 2>&1 > star_genomegenerate.log
+    STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta --sjdbGTFfile $gtf --runThreadN $task.cpus $extra_args 2>&1 | tee star_genomegenerate.log
     STAR --version 2>&1 > versions.txt
     """
 }

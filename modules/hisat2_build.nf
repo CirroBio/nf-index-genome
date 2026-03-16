@@ -20,7 +20,7 @@ process HISAT2_BUILD {
     def snp_arg       = snp.size()       > 0 ? "--snp ${snp}"             : ""
     def haplotype_arg = haplotype.size() > 0 ? "--haplotype ${haplotype}" : ""
     """
-    hisat2-build -p ${task.cpus} ${ss_arg} ${exon_arg} ${snp_arg} ${haplotype_arg} ${extra_args} ${fasta} genome 2>&1 > hisat2_build.log
+    hisat2-build -p ${task.cpus} ${ss_arg} ${exon_arg} ${snp_arg} ${haplotype_arg} ${extra_args} ${fasta} genome 2>&1 | tee hisat2_build.log
     hisat2 --version 2>&1 > versions.txt
     """
 }

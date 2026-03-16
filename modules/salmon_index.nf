@@ -12,7 +12,7 @@ process SALMON_INDEX {
     script:
     def extra_args = params.salmon_extra_args ?: ""
     """
-    salmon index -t $transcriptome -i salmon_index $extra_args 2>&1 > salmon_index.log
+    salmon index -t $transcriptome -i salmon_index $extra_args 2>&1 | tee salmon_index.log
     salmon --version 2>&1 > versions.txt
     """
 }
