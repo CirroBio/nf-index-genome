@@ -114,8 +114,8 @@ workflow HISAT2_INDEX {
     ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
     HISAT2_BUILD(ch_fasta, ch_ss, ch_exon, ch_snp, ch_haplotype)
 
-    if (params.gtf) {
-        ch_gtf = Channel.fromPath(params.gtf, checkIfExists: true)
+    if (params.hisat2_gtf) {
+        ch_gtf = Channel.fromPath(params.hisat2_gtf, checkIfExists: true)
         PUBLISH_GTF(ch_gtf)
     }
 }
