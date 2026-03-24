@@ -8,7 +8,9 @@ process STAR_GENOMEGENERATE {
     path gtf
 
     output:
-    path "*"
+    path "*", emit: index
+    path "$fasta", emit: fasta
+    path "$gtf", emit: gtf
 
     script:
     def extra_args = params.star_extra_args ?: ""

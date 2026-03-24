@@ -8,6 +8,7 @@ process BWA_INDEX {
 
     output:
     path "*"
+    path "$fasta"
 
     script:
     def extra_args = params.bwa_extra_args ?: ""

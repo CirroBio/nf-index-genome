@@ -8,6 +8,7 @@ process SALMON_INDEX {
 
     output:
     path 'salmon_index', emit: index
+    path "$transcriptome", emit: transcriptome
 
     script:
     def extra_args = params.salmon_extra_args ?: ""

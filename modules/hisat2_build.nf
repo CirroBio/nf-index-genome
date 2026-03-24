@@ -12,6 +12,7 @@ process HISAT2_BUILD {
 
     output:
     path "*"
+    path "$fasta"
 
     script:
     def extra_args    = params.hisat2_extra_args ?: ""

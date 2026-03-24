@@ -8,6 +8,7 @@ process KALLISTO_INDEX {
 
     output:
     path 'kallisto_index.idx', emit: index
+    path "$transcriptome", emit: transcriptome
 
     script:
     def extra_args = params.kallisto_extra_args ?: ""

@@ -8,6 +8,7 @@ process RSEM_PREPAREREFERENCE {
 
     output:
     path 'rsem_index', emit: index
+    path "$fasta", emit: fasta
 
     script:
     def extra_args = params.rsem_extra_args ?: ""

@@ -7,7 +7,8 @@ process BISMARK_GENOMEPREPARATION {
     path "genome/"
 
     output:
-    path "*"
+    path "*", emit: index
+    path "genome/", emit: genome
 
     script:
     def extra_args = params.bismark_extra_args ?: ""

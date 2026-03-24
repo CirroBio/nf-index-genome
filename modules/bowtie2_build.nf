@@ -8,6 +8,7 @@ process BOWTIE2_BUILD {
 
     output:
     path '*', emit: index
+    path "$fasta", emit: fasta
 
     script:
     def extra_args = params.bowtie2_extra_args ?: ""
