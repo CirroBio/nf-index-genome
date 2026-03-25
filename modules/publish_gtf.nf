@@ -5,11 +5,11 @@ process PUBLISH_GTF {
     path gtf
 
     output:
-    path "genome.gtf.gz"
+    path "genome.gtf"
 
     script:
-    "gzip -t $gtf 2>/dev/null && cp $gtf genome.gtf.gz || gzip -c $gtf > genome.gtf.gz"
+    "cp $gtf genome.gtf"
 
     stub:
-    "touch genome.gtf.gz"
+    "touch genome.gtf"
 }
