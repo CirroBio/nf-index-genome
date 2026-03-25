@@ -5,11 +5,11 @@ process PUBLISH_FASTA {
     path fasta
 
     output:
-    path "genome.fasta.gz"
+    path "genome.fasta"
 
     script:
-    "gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz"
+    "gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta || cp $fasta genome.fasta"
 
     stub:
-    "touch genome.fasta.gz"
+    "touch genome.fasta"
 }

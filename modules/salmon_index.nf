@@ -8,13 +8,13 @@ process SALMON_INDEX {
 
     output:
     path 'salmon_index', emit: index
-    path "transcriptome.fasta.gz", emit: transcriptome
+    path "transcriptome.fasta", emit: transcriptome
 
     script:
     def extra_args = params.salmon_extra_args ?: ""
     """
     salmon index -t $transcriptome -i salmon_index $extra_args 2>&1 | tee salmon_index.log
     salmon --version 2>&1 > versions.txt
-    gzip -t $transcriptome 2>/dev/null && cp $transcriptome transcriptome.fasta.gz || gzip -c $transcriptome > transcriptome.fasta.gz
+    gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcriptome.fasta || cp $transcriptome transcriptome.fasta
     """
 }

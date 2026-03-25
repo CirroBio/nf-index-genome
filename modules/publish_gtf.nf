@@ -8,7 +8,7 @@ process PUBLISH_GTF {
     path "genome.gtf"
 
     script:
-    "cp $gtf genome.gtf"
+    "gzip -t $gtf 2>/dev/null && gzip -cd $gtf > genome.gtf || cp $gtf genome.gtf"
 
     stub:
     "touch genome.gtf"

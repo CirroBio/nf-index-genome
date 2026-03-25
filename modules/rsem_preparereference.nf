@@ -8,7 +8,7 @@ process RSEM_PREPAREREFERENCE {
 
     output:
     path 'rsem_index', emit: index
-    path "genome.fasta.gz", emit: fasta
+    path "genome.fasta", emit: fasta
 
     script:
     def extra_args = params.rsem_extra_args ?: ""
@@ -16,6 +16,6 @@ process RSEM_PREPAREREFERENCE {
     mkdir rsem_index
     rsem-prepare-reference $extra_args $fasta rsem_index/genome 2>&1 | tee rsem_prepare_reference.log
     rsem-calculate-expression --version 2>&1 > versions.txt
-    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
+    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta || cp $fasta genome.fasta
     """
 }

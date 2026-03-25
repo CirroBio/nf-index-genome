@@ -12,7 +12,7 @@ process HISAT2_BUILD {
 
     output:
     path "*"
-    path "genome.fasta.gz"
+    path "genome.fasta"
 
     script:
     def extra_args    = params.hisat2_extra_args ?: ""
@@ -23,6 +23,6 @@ process HISAT2_BUILD {
     """
     hisat2-build -p ${task.cpus} ${ss_arg} ${exon_arg} ${snp_arg} ${haplotype_arg} ${extra_args} ${fasta} genome 2>&1 | tee hisat2_build.log
     hisat2 --version 2>&1 > versions.txt
-    gzip -t ${fasta} 2>/dev/null && cp ${fasta} genome.fasta.gz || gzip -c ${fasta} > genome.fasta.gz
+    gzip -t ${fasta} 2>/dev/null && gzip -cd ${fasta} > genome.fasta || cp ${fasta} genome.fasta
     """
 }

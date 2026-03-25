@@ -9,7 +9,7 @@ process STAR_GENOMEGENERATE {
 
     output:
     path "*", emit: index
-    path "genome.fasta.gz", emit: fasta
+    path "genome.fasta", emit: fasta
     path "genome.gtf", emit: gtf, optional: true
 
     script:
@@ -18,7 +18,7 @@ process STAR_GENOMEGENERATE {
     """
     STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta $gtf_arg --runThreadN $task.cpus $extra_args 2>&1 | tee star_genomegenerate.log
     STAR --version 2>&1 > versions.txt
-    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
-    [ -s "$gtf" ] && cp $gtf genome.gtf || true
+    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta || cp $fasta genome.fasta
+    [ -s "$gtf" ] && { gzip -t $gtf 2>/dev/null && gzip -cd $gtf > genome.gtf || cp $gtf genome.gtf; } || true
     """
 }
