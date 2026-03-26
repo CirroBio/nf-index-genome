@@ -18,7 +18,8 @@ process STAR_GENOMEGENERATE {
     """
     STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta $gtf_arg --runThreadN $task.cpus $extra_args 2>&1 | tee star_genomegenerate.log
     STAR --version 2>&1 > versions.txt
-    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta || cp $fasta genome.fasta
-    [ -s "$gtf" ] && { gzip -t $gtf 2>/dev/null && gzip -cd $gtf > genome.gtf || cp $gtf genome.gtf; } || true
+    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta.tmp || cp $fasta genome.fasta.tmp
+    mv genome.fasta.tmp genome.fasta
+    [ -s "$gtf" ] && { gzip -t $gtf 2>/dev/null && gzip -cd $gtf > genome.gtf.tmp || cp $gtf genome.gtf.tmp; mv genome.gtf.tmp genome.gtf; } || true
     """
 }

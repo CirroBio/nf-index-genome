@@ -16,6 +16,7 @@ process RSEM_PREPAREREFERENCE {
     mkdir rsem_index
     rsem-prepare-reference $extra_args $fasta rsem_index/genome 2>&1 | tee rsem_prepare_reference.log
     rsem-calculate-expression --version 2>&1 > versions.txt
-    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta || cp $fasta genome.fasta
+    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta.tmp || cp $fasta genome.fasta.tmp
+    mv genome.fasta.tmp genome.fasta
     """
 }

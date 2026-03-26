@@ -15,6 +15,7 @@ process KALLISTO_INDEX {
     """
     kallisto index -i kallisto_index.idx $extra_args $transcriptome 2>&1 | tee kallisto_index.log
     kallisto version 2>&1 > versions.txt
-    gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcriptome.fasta || cp $transcriptome transcriptome.fasta
+    gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcriptome.fasta.tmp || cp $transcriptome transcriptome.fasta.tmp
+    mv transcriptome.fasta.tmp transcriptome.fasta
     """
 }

@@ -15,6 +15,7 @@ process BWA_INDEX {
     """
     bwa index -p genome $extra_args $fasta 2>&1 | tee bwa_index.log
     bwa 2>&1 | head -4 | tail -n 3 > versions.txt
-    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta || cp $fasta genome.fasta
+    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta.tmp || cp $fasta genome.fasta.tmp
+    mv genome.fasta.tmp genome.fasta
     """
 }

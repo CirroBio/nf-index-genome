@@ -15,6 +15,7 @@ process SALMON_INDEX {
     """
     salmon index -t $transcriptome -i salmon_index $extra_args 2>&1 | tee salmon_index.log
     salmon --version 2>&1 > versions.txt
-    gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcriptome.fasta || cp $transcriptome transcriptome.fasta
+    gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcriptome.fasta.tmp || cp $transcriptome transcriptome.fasta.tmp
+    mv transcriptome.fasta.tmp transcriptome.fasta
     """
 }
