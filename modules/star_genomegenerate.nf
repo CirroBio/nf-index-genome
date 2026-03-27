@@ -14,12 +14,18 @@ process STAR_GENOMEGENERATE {
 
     script:
     def extra_args = params.star_extra_args ?: ""
-    def gtf_arg = gtf.size() > 0 ? "--sjdbGTFfile $gtf" : ""
     """
-    STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta $gtf_arg --runThreadN $task.cpus $extra_args 2>&1 | tee star_genomegenerate.log
+    if [ -s "$gtf" ]; then
+      gzip -t $gtf 2>/dev/null && gzip -cd $gtf > sjdb.gtf.tmp || cp $gtf sjdb.gtf.tmp
+      mv sjdb.gtf.tmp sjdb.gtf
+      SJDB_OPT="--sjdbGTFfile sjdb.gtf"
+    else
+      SJDB_OPT=""
+    fi
+    STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta \$SJDB_OPT --runThreadN $task.cpus $extra_args 2>&1 | tee star_genomegenerate.log
     STAR --version 2>&1 > versions.txt
     gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta.tmp || cp $fasta genome.fasta.tmp
     mv genome.fasta.tmp genome.fasta
-    [ -s "$gtf" ] && { gzip -t $gtf 2>/dev/null && gzip -cd $gtf > genome.gtf.tmp || cp $gtf genome.gtf.tmp; mv genome.gtf.tmp genome.gtf; } || true
+    [ -f sjdb.gtf ] && { cp sjdb.gtf genome.gtf.tmp && mv genome.gtf.tmp genome.gtf; } || true
     """
 }

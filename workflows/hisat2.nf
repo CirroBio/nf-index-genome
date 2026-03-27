@@ -54,7 +54,9 @@ process HISAT2_EXTRACT_SPLICE_SITES {
     script:
         """#!/bin/bash
 set -e
-hisat2_extract_splice_sites.py ${gtf} > splice_sites.ss
+gzip -t ${gtf} 2>/dev/null && gzip -cd ${gtf} > annotation.gtf.tmp || cp ${gtf} annotation.gtf.tmp
+mv annotation.gtf.tmp annotation.gtf
+hisat2_extract_splice_sites.py annotation.gtf > splice_sites.ss
         """
     stub:
         'touch splice_sites.ss'
@@ -69,7 +71,9 @@ process HISAT2_EXTRACT_EXONS {
     script:
         """#!/bin/bash
 set -e
-hisat2_extract_exons.py ${gtf} > exons.exon
+gzip -t ${gtf} 2>/dev/null && gzip -cd ${gtf} > annotation.gtf.tmp || cp ${gtf} annotation.gtf.tmp
+mv annotation.gtf.tmp annotation.gtf
+hisat2_extract_exons.py annotation.gtf > exons.exon
         """
     stub:
         'touch exons.exon'
