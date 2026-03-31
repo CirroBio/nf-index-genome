@@ -1,6 +1,8 @@
 process BWA_INDEX {
     tag "$fasta"
 
+    publishDir params.outdir, mode: 'copy', overwrite: true
+
     container "${params.container}"
 
     input:
@@ -8,14 +10,15 @@ process BWA_INDEX {
 
     output:
     path "*"
-    path "genome.fasta"
 
     script:
     def extra_args = params.bwa_extra_args ?: ""
     """
+    # Build BWA index with output prefix 'genome'
     bwa index -p genome $extra_args $fasta 2>&1 | tee bwa_index.log
+    # Record tool version
     bwa 2>&1 | head -4 | tail -n 3 > versions.txt
-    gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta.tmp || cp $fasta genome.fasta.tmp
-    mv genome.fasta.tmp genome.fasta
+    # Publish genome FASTA (copy as-is if already gzipped, otherwise compress)
+    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
     """
 }

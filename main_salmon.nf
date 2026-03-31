@@ -1,13 +1,16 @@
 /*
  * Entrypoint: Build Salmon transcriptome index.
- * Usage: nextflow run main_salmon.nf --fasta /path/to/transcriptome.fa [--outdir ./results]
+ * Usage: nextflow run main_salmon.nf --fasta /path/to/genome.fa --gtf /path/to/genes.gtf [--extra_fasta /path/to/extra.fa] [--outdir ./results]
  */
 
 include { SALMON_INDEX_WF } from './workflows/salmon.nf'
 
 workflow {
     if (!params.fasta) {
-        exit 1, "Required parameter: --fasta (transcriptome FASTA file)"
+        exit 1, "Required parameter: --fasta (genome FASTA file)"
+    }
+    if (!params.gtf) {
+        exit 1, "Required parameter: --gtf (gene annotation GTF file)"
     }
     if (!params.outdir) {
         exit 1, "Required parameter: --outdir (output directory)"
