@@ -11,7 +11,6 @@ process SALMON_INDEX {
 
     output:
     path "*"
-    path "transcriptome.fasta.gz"
 
     script:
     def extra_args = params.salmon_extra_args ?: ""
@@ -29,8 +28,6 @@ process SALMON_INDEX {
     salmon index -t $salmon_input -i salmon_index $extra_args 2>&1 | tee salmon_index.log
     # Record tool version
     salmon --version 2>&1 > versions.txt
-    # Publish the compressed transcriptome FASTA
-    gzip transcriptome.fasta
     """
 
     stub:
