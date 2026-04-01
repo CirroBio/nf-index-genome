@@ -18,7 +18,5 @@ process BWA_INDEX {
     bwa index -p genome $extra_args $fasta 2>&1 | tee bwa_index.log
     # Record tool version
     bwa 2>&1 | head -4 | tail -n 3 > versions.txt
-    # Publish genome FASTA (copy as-is if already gzipped, otherwise compress)
-    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
     """
 }

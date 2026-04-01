@@ -21,7 +21,5 @@ process RSEM_PREPAREREFERENCE {
     rsem-prepare-reference $extra_args $fasta rsem_index/genome 2>&1 | tee rsem_prepare_reference.log
     # Record tool version
     rsem-calculate-expression --version 2>&1 > versions.txt
-    # Publish genome FASTA (copy as-is if already gzipped, otherwise compress)
-    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
     """
 }

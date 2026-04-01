@@ -5,6 +5,7 @@
  */
 
 include { HISAT2_BUILD } from '../modules/hisat2_build.nf'
+include { PUBLISH_FASTA } from '../modules/publish_fasta.nf'
 include { PUBLISH_GTF } from '../modules/publish_gtf.nf'
 
 // Placeholder processes — module requires path inputs even when files are not used
@@ -117,6 +118,7 @@ workflow HISAT2_INDEX {
     }
     ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
     HISAT2_BUILD(ch_fasta, ch_ss, ch_exon, ch_snp, ch_haplotype)
+    PUBLISH_FASTA(ch_fasta)
 
     if (params.hisat2_gtf) {
         ch_gtf = Channel.fromPath(params.hisat2_gtf, checkIfExists: true)

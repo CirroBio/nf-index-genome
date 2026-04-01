@@ -18,7 +18,5 @@ process BOWTIE2_BUILD {
     bowtie2-build --threads $task.cpus $extra_args $fasta genome 2>&1 | tee bowtie2_build.log
     # Record tool version
     bowtie2 --version 2>&1 > versions.txt
-    # Publish genome FASTA (copy as-is if already gzipped, otherwise compress)
-    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
     """
 }

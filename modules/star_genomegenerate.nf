@@ -27,8 +27,6 @@ process STAR_GENOMEGENERATE {
     STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta \$SJDB_OPT --runThreadN $task.cpus $extra_args 2>&1 | tee star_genomegenerate.log
     # Record tool version
     STAR --version 2>&1 > versions.txt
-    # Publish genome FASTA (copy as-is if already gzipped, otherwise compress)
-    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
     # Publish GTF with canonical name if one was used
     [ -f sjdb.gtf ] && { cp sjdb.gtf genome.gtf.tmp && mv genome.gtf.tmp genome.gtf; } || true
     """

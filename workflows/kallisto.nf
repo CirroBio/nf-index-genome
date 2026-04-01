@@ -6,6 +6,7 @@
 
 include { GFFREAD } from '../modules/gffread.nf'
 include { KALLISTO_INDEX } from '../modules/kallisto_index.nf'
+include { PUBLISH_FASTA } from '../modules/publish_fasta.nf'
 include { PUBLISH_GTF } from '../modules/publish_gtf.nf'
 
 workflow KALLISTO_INDEX_WF {
@@ -14,5 +15,6 @@ workflow KALLISTO_INDEX_WF {
 
     GFFREAD(ch_genome, ch_gtf)
     KALLISTO_INDEX(GFFREAD.out.transcriptome)
+    PUBLISH_FASTA(ch_genome)
     PUBLISH_GTF(ch_gtf)
 }
