@@ -1,5 +1,5 @@
 /*
- * Workflow tests for main_kallisto.nf using nf-core test data (sarscov2 genome).
+ * Workflow tests for main_kallisto.nf using nf-core test data (sarscov2 genome + GTF).
  */
 nextflow_workflow {
     name "Test workflow main_kallisto"
@@ -9,13 +9,14 @@ nextflow_workflow {
     tag "index"
     tag "kallisto"
 
-    test("Kallisto index with nf-core sarscov2 genome - stub") {
+    test("Kallisto index with nf-core sarscov2 genome and GTF - stub") {
         tag "stub"
         options "-stub"
 
         when {
             params {
                 fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.fasta'
+                gtf   = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.gtf'
                 outdir = "$outputDir"
             }
         }
@@ -26,10 +27,11 @@ nextflow_workflow {
         }
     }
 
-    test("Kallisto index with nf-core sarscov2 genome") {
+    test("Kallisto index with nf-core sarscov2 genome and GTF") {
         when {
             params {
                 fasta = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.fasta'
+                gtf   = 'https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/genomics/sarscov2/genome/genome.gtf'
                 outdir = "$outputDir"
             }
         }
