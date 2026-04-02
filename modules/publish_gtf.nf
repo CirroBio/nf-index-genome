@@ -11,7 +11,8 @@ process PUBLISH_GTF {
 
     script:
     """
-    # Publish GTF with canonical name (decompress if needed)
+    # Publish the GTF with the canonical filename genome.gtf
+    # If the input is gzipped, decompress it first; otherwise copy it directly
     gzip -t $gtf 2>/dev/null && gzip -cd $gtf > genome.gtf.tmp || cp $gtf genome.gtf.tmp
     mv genome.gtf.tmp genome.gtf
     """

@@ -11,7 +11,8 @@ process PUBLISH_FASTA {
 
     script:
     """
-    # Publish genome FASTA with canonical name (copy as-is if already gzipped, otherwise compress)
+    # Publish the genome FASTA with the canonical filename genome.fasta.gz
+    # If the input is already gzipped, copy it directly; otherwise compress it first
     gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
     """
 

@@ -15,15 +15,16 @@ process BISMARK_GENOMEPREPARATION {
     """#!/bin/bash
 set -euo pipefail
 
-# Build bisulfite-converted genome index inside the genome/ directory
-bismark_genome_preparation \
-    --${params.aligner} \
-    --parallel ${task.cpus} \
-    --genomic_composition \
-    $extra_args \
+# Build the bisulfite-converted genome index inside the genome/ directory
+# --genomic_composition computes base composition statistics used by Bismark during alignment
+bismark_genome_preparation \\
+    --${params.aligner} \\
+    --parallel ${task.cpus} \\
+    --genomic_composition \\
+    $extra_args \\
     genome/ 2>&1 | tee bismark_genome_preparation.log
 
-# Record tool version
+# Record the Bismark version used to build this index
 bismark_genome_preparation --version 2>&1 > versions.txt
     """
 }

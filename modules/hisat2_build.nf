@@ -22,9 +22,12 @@ process HISAT2_BUILD {
     def snp_arg       = snp.size()       > 0 ? "--snp ${snp}"             : ""
     def haplotype_arg = haplotype.size() > 0 ? "--haplotype ${haplotype}" : ""
     """
-    # Build HISAT2 index with output prefix 'genome'
+    # Build the HISAT2 genome index; all output files share the prefix 'genome'
+    # Splice site, exon, SNP, and haplotype arguments are included only when the
+    # corresponding files are provided (non-empty placeholders are skipped automatically)
     hisat2-build -p ${task.cpus} ${ss_arg} ${exon_arg} ${snp_arg} ${haplotype_arg} ${extra_args} ${fasta} genome 2>&1 | tee hisat2_build.log
-    # Record tool version
+
+    # Record the HISAT2 version used to build this index
     hisat2 --version 2>&1 > versions.txt
     """
 }

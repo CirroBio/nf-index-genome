@@ -1,109 +1,454 @@
 # nf-index-genome
 
-Utilities for building genome indices using [nf-core/modules](https://github.com/nf-core/modules). Each tool has its own Nextflow entrypoint that runs the corresponding nf-core index module.
+Nextflow workflows for building genome and transcriptome indices. Each tool has its own entrypoint (`main_<tool>.nf`) that runs the corresponding indexing process.
+
+---
+
+## Shared behavior
+
+The following behaviors are common to all (or most) workflows. When reading per-tool details below, these can be assumed unless otherwise noted.
+
+### Common inputs
+
+| Parameter | Required by | Description |
+|---|---|---|
+| `--fasta` | all tools | Genome FASTA (gzipped or uncompressed) |
+| `--gtf` | STAR (required); Bowtie2, BWA, Bismark, Kallisto, RSEM (optional, published only or used for transcriptome) | Gene annotation GTF |
+| `--outdir` | all tools | Output directory (default: `./results`) |
+| `--container` | all tools | Container image for the indexing tool |
+
+### Input decompression
+
+All workflows transparently handle gzipped (`.gz`) or uncompressed FASTA and GTF inputs. The pattern used throughout is:
+
+```bash
+gzip -t $file 2>/dev/null && gzip -cd $file > file.tmp || cp $file file.tmp
+```
+
+### Always-published outputs
+
+Every workflow publishes the following files regardless of other options:
+
+| File | Source |
+|---|---|
+| `genome.fasta.gz` | `PUBLISH_FASTA` — copies input FASTA, compressing if needed |
+| `versions.txt` | Written by each indexing process |
+
+When `--gtf` is provided, all workflows (except STAR, which handles this internally) additionally publish:
+
+| File | Source |
+|---|---|
+| `genome.gtf` | `PUBLISH_GTF` — copies input GTF, decompressing if needed |
+
+### Transcriptome FASTA generation
+
+Three workflows (Bowtie2, Kallisto, Salmon) build a transcriptome FASTA from the genome + GTF as an intermediate step. The tool is controlled by `--transcriptome_source`:
+
+| Value | Tool | Method |
+|---|---|---|
+| `gffread` (default) | gffread v0.12.7 | `gffread genome.gtf -g genome.fasta -w transcriptome.fasta` — extracts transcript sequences using genomic coordinates; handles prokaryotic annotations lacking `exon` features |
+| `rsem` | rsem-prepare-reference | `rsem-prepare-reference --gtf genome.gtf genome.fasta rsem_ref/genome` — produces `rsem_ref/genome.transcripts.fa`; the standard approach for eukaryotic annotations |
+
+The container for gffread is set separately via `--gffread_container` (default: `quay.io/biocontainers/gffread:0.12.7--h077b44d_6`). When `--transcriptome_source rsem`, `--container` must point to an RSEM image.
+
+---
 
 ## Tools
 
-| Tool      | Entrypoint         | Description |
-|-----------|--------------------|-------------|
-| **Bowtie2** | `main_bowtie2.nf`  | Bowtie2 genome index (`.bt2`) |
-| **STAR**    | `main_star.nf`     | STAR genome index (splice-aware with GTF) |
-| **Bismark** | `main_bismark.nf`  | Bismark bisulfite genome preparation |
-| **BWA**     | `main_bwa.nf`      | BWA genome index |
-| **HISAT2**  | `main_hisat2.nf`   | HISAT2 genome index (optional GTF/splice sites for RNA) |
+### Bowtie2
+
+**Entrypoint:** `main_bowtie2.nf`  
+**Index type:** Short-read DNA alignment index (`.bt2` / `.bt2l` files)
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | no | GTF for transcriptome index |
+| `--container` | yes | Bowtie2 container image |
+| `--transcriptome_source` | no | `gffread` (default) or `rsem` |
+| `--bowtie2_extra_args` | no | Extra flags passed to `bowtie2-build` |
+
+#### Processing steps
+
+1. **Genome index** (always): `bowtie2-build --threads N <genome.fasta> genome` — prefix `genome`, log `bowtie2_build_genome.log`
+2. **Transcriptome FASTA** (if `--gtf`): see [Transcriptome FASTA generation](#transcriptome-fasta-generation)
+3. **Transcriptome index** (if `--gtf`): `bowtie2-build --threads N <transcriptome.fasta.gz> transcriptome` — prefix `transcriptome`, log `bowtie2_build_transcriptome.log`
+4. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `genome.1.bt2`, `genome.2.bt2`, … | always |
+| `transcriptome.1.bt2`, `transcriptome.2.bt2`, … | if `--gtf` |
+| `transcriptome.fasta.gz` | if `--gtf` |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | if `--gtf` |
+| `bowtie2_build_genome.log` | always |
+| `bowtie2_build_transcriptome.log` | if `--gtf` |
+| `versions.txt` | always |
+
+---
+
+### BWA
+
+**Entrypoint:** `main_bwa.nf`  
+**Index type:** Short-read DNA alignment index
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | no | GTF (published only; not used for indexing) |
+| `--container` | yes | BWA container image |
+| `--bwa_extra_args` | no | Extra flags passed to `bwa index` |
+
+#### Processing steps
+
+1. **Genome index**: `bwa index -p genome <genome.fasta>` — prefix `genome`, log `bwa_index.log`
+2. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `genome.amb`, `genome.ann`, `genome.bwt`, `genome.pac`, `genome.sa` | always |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | if `--gtf` |
+| `bwa_index.log` | always |
+| `versions.txt` | always |
+
+---
+
+### HISAT2
+
+**Entrypoint:** `main_hisat2.nf`  
+**Index type:** Splice-aware RNA/DNA alignment index (`.ht2` files)
+
+HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` used by other tools. This is because it runs its own Python extraction scripts on the GTF rather than passing it directly to the indexer.
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--hisat2_gtf` | no | GTF — auto-extracts splice sites and exons; mutually exclusive with `--hisat2_ss`/`--hisat2_exon` |
+| `--hisat2_ss` | no | Pre-computed splice sites file (`.ss`); ignored if `--hisat2_gtf` given |
+| `--hisat2_exon` | no | Pre-computed exon file (`.exon`); ignored if `--hisat2_gtf` given |
+| `--hisat2_snp` | no | SNP file for SNP-aware indexing |
+| `--hisat2_haplotype` | no | Haplotype file for haplotype-aware indexing |
+| `--container` | yes | HISAT2 container image |
+| `--hisat2_extra_args` | no | Extra flags passed to `hisat2-build` |
+
+#### Processing steps
+
+1. **Splice sites / exons** (if `--hisat2_gtf`):
+   - `hisat2_extract_splice_sites.py annotation.gtf > splice_sites.ss`
+   - `hisat2_extract_exons.py annotation.gtf > exons.exon`
+   - If `--hisat2_gtf` is not given, uses `--hisat2_ss` / `--hisat2_exon` directly, or creates empty placeholder files if those are also absent.
+2. **SNP / haplotype**: uses provided files or creates empty placeholders if absent.
+3. **Genome index**: `hisat2-build -p N [--ss] [--exon] [--snp] [--haplotype] <genome.fasta> genome` — prefix `genome`, log `hisat2_build.log`
+4. `PUBLISH_FASTA` and (if `--hisat2_gtf`) `PUBLISH_GTF`
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `genome.1.ht2`, `genome.2.ht2`, … (up to 8) | always |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | if `--hisat2_gtf` |
+| `hisat2_build.log` | always |
+| `versions.txt` | always |
+
+---
+
+### STAR
+
+**Entrypoint:** `main_star.nf`  
+**Index type:** Splice-aware RNA alignment index (STAR genome directory)
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | yes | GTF for splice junction database |
+| `--container` | yes | STAR container image |
+| `--star_extra_args` | no | Extra flags passed to `STAR --runMode genomeGenerate` |
+
+#### Processing steps
+
+1. Decompress GTF if needed.
+2. **Genome index**: `STAR --runMode genomeGenerate --sjdbGTFfile sjdb.gtf --genomeFastaFiles <genome.fasta> --runThreadN N` — log `star_genomegenerate.log`
+3. Copy decompressed GTF to `genome.gtf` (done inside the STAR process, not via `PUBLISH_GTF`).
+4. `PUBLISH_FASTA`
+
+**Note:** STAR is the only workflow that does not use the shared `PUBLISH_GTF` module — GTF publishing is handled inside the `STAR_GENOMEGENERATE` process itself.
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| STAR genome directory files (`Genome`, `SA`, `SAindex`, `chrName.txt`, etc.) | always |
+| `genome.gtf` | always (GTF is required) |
+| `genome.fasta.gz` | always |
+| `star_genomegenerate.log` | always |
+| `versions.txt` | always |
+
+---
+
+### Salmon
+
+**Entrypoint:** `main_salmon.nf`  
+**Index type:** Quasi-mapping transcriptome index with full-genome decoys (`salmon_index/` directory)
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | yes | GTF for transcriptome generation |
+| `--container` | yes | Salmon container image |
+| `--extra_fasta` | no | Additional FASTA concatenated into transcript targets before indexing (default: empty placeholder) |
+| `--transcriptome_source` | no | `gffread` (default) or `rsem` |
+| `--gffread_container` | no | gffread container (used when `transcriptome_source = gffread`) |
+| `--salmon_extra_args` | no | Extra flags passed to `salmon index` |
+
+#### Processing steps
+
+1. **Transcriptome FASTA**: see [Transcriptome FASTA generation](#transcriptome-fasta-generation) — produces `transcriptome.fasta.gz`
+2. **Decoy-aware index** (always, since genome is always provided):
+   - Decompress transcriptome FASTA → `transcripts.fasta`
+   - If `--extra_fasta` is non-empty: concatenate into `transcripts.fasta`
+   - Decompress genome FASTA → `genome.fasta`
+   - Extract decoy names: `grep '^>' genome.fasta | cut -d ' ' -f 1 | sed 's/>//g' > decoys.txt`
+   - Build gentrome (transcripts first, required by Salmon): `cat transcripts.fasta genome.fasta > gentrome.fasta`
+   - Index: `salmon index --threads N -t gentrome.fasta -d decoys.txt -i salmon_index` — log `salmon_index.log`
+3. `PUBLISH_FASTA` and `PUBLISH_GTF`
+
+**Why decoys?** Reads from intergenic/intronic regions can be spuriously assigned to the nearest transcript. Providing the whole genome as a decoy lets Salmon recognize and discard these reads during quantification, improving accuracy.
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `salmon_index/` (directory with index files) | always |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | always (GTF is required) |
+| `salmon_index.log` | always |
+| `versions.txt` | always |
+
+---
+
+### Kallisto
+
+**Entrypoint:** `main_kallisto.nf`  
+**Index type:** k-mer pseudoalignment index (`.idx` file)
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | no | GTF for transcriptome index |
+| `--container` | yes | Kallisto container image |
+| `--transcriptome_source` | no | `gffread` (default) or `rsem` — only used if `--gtf` is provided |
+| `--gffread_container` | no | gffread container (used when `transcriptome_source = gffread`) |
+| `--kallisto_extra_args` | no | Extra flags passed to `kallisto index` |
+
+#### Processing steps
+
+1. **Genome index** (always): `kallisto index -i genome.idx <genome.fasta>` — log `kallisto_index_genome.log`
+2. If `--gtf`:
+   - **Transcriptome FASTA**: see [Transcriptome FASTA generation](#transcriptome-fasta-generation) — produces `transcriptome.fasta.gz`
+   - **Transcriptome index**: `kallisto index -i transcriptome.idx <transcriptome.fasta.gz>` — log `kallisto_index_transcriptome.log`
+   - Publish `transcriptome.fasta.gz`
+3. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `genome.idx` | always |
+| `transcriptome.idx` | if `--gtf` |
+| `transcriptome.fasta.gz` | if `--gtf` |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | if `--gtf` |
+| `kallisto_index_genome.log` | always |
+| `kallisto_index_transcriptome.log` | if `--gtf` |
+| `versions.txt` | always |
+
+---
+
+### RSEM
+
+**Entrypoint:** `main_rsem.nf`  
+**Index type:** RSEM reference (`rsem_index/` directory)
+
+**Note:** This workflow does not accept a GTF for the RSEM reference build — the GTF is published if provided but not used for indexing. To pass a GTF to `rsem-prepare-reference`, use `--rsem_extra_args '--gtf path/to/genes.gtf'`.
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome or transcriptome FASTA |
+| `--gtf` | no | GTF (published only; not passed to RSEM) |
+| `--container` | yes | RSEM container image |
+| `--rsem_extra_args` | no | Extra flags passed to `rsem-prepare-reference` |
+
+#### Processing steps
+
+1. **RSEM reference**: `rsem-prepare-reference <extra_args> <fasta> rsem_index/genome` — log `rsem_prepare_reference.log`
+2. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `rsem_index/` (directory: `genome.grp`, `genome.ti`, `genome.transcripts.fa`, etc.) | always |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | if `--gtf` |
+| `rsem_prepare_reference.log` | always |
+| `versions.txt` | always |
+
+---
+
+### Bismark
+
+**Entrypoint:** `main_bismark.nf`  
+**Index type:** Bisulfite-converted genome index (`genome/Bisulfite_Genome/` directory)
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--aligner` | yes | `bowtie2` or `hisat2` — determines which aligner Bismark builds the index for |
+| `--gtf` | no | GTF (published only; not used for indexing) |
+| `--container` | yes | Bismark container image |
+| `--bismark_extra_args` | no | Extra flags passed to `bismark_genome_preparation` |
+
+#### Processing steps
+
+1. Stage the genome FASTA inside a `genome/` subdirectory (required by `bismark_genome_preparation`).
+2. **Bisulfite index**: `bismark_genome_preparation --[bowtie2|hisat2] --parallel N --genomic_composition genome/` — log `bismark_genome_preparation.log`
+3. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `genome/Bisulfite_Genome/` (CT and GA conversion index files) | always |
+| `genome/` (original FASTA and genome composition file) | always |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | if `--gtf` |
+| `bismark_genome_preparation.log` | always |
+| `versions.txt` | always |
+
+---
 
 ## Setup
 
 1. **Install Nextflow** (>= 24.04.0).
 
-2. **Modules**: This repo ships with the required nf-core modules under `modules/nf-core/modules/`, so you can run the workflows as-is. To update modules from nf-core (optional):
+2. **Modules**: All required modules are bundled under `modules/`. To update modules from nf-core (optional):
 
    ```bash
-   pip install nf-core  # or conda install nf-core
+   pip install nf-core
    ./scripts/install_modules.sh
    ```
 
 ## Usage
 
-Common options (all workflows):
-
-- `--fasta` – (required) Path to reference genome FASTA.
-- `--outdir` – Output directory (default: `./results`).
-- `--gtf` – (required for STAR; optional for HISAT2) Gene annotation GTF.
-- `--splicesites` – (optional, HISAT2 only) Splice sites file.
-
-### Examples
-
 ```bash
-# Bowtie2 index
-nextflow run main_bowtie2.nf --fasta genome.fa --outdir results/bowtie2
+# Bowtie2 — genome index only
+nextflow run main_bowtie2.nf --fasta genome.fa --outdir results/ --container biocontainers/bowtie2:2.5.1
 
-# STAR index (GTF required for splice-aware index)
-nextflow run main_star.nf --fasta genome.fa --gtf genes.gtf --outdir results/star
+# Bowtie2 — genome + transcriptome index
+nextflow run main_bowtie2.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container biocontainers/bowtie2:2.5.1
 
-# Bismark genome preparation
-nextflow run main_bismark.nf --fasta genome.fa --outdir results/bismark
+# BWA
+nextflow run main_bwa.nf --fasta genome.fa --outdir results/ --container biocontainers/bwa:0.7.17
 
-# BWA index
-nextflow run main_bwa.nf --fasta genome.fa --outdir results/bwa
+# HISAT2 — splice-aware (GTF auto-extracts splice sites and exons)
+nextflow run main_hisat2.nf --fasta genome.fa --hisat2_gtf genes.gtf --outdir results/ --container biocontainers/hisat2:2.2.1
 
-# HISAT2 (genome-only or with GTF/splice sites)
-nextflow run main_hisat2.nf --fasta genome.fa --outdir results/hisat2
-nextflow run main_hisat2.nf --fasta genome.fa --gtf genes.gtf --splicesites ss.txt --outdir results/hisat2
-```
+# STAR
+nextflow run main_star.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container biocontainers/star:2.7.10a
 
-Run with Docker or Singularity so the nf-core module containers are used:
+# Salmon — decoy-aware (genome + GTF, gffread for transcriptome)
+nextflow run main_salmon.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container biocontainers/salmon:1.10.3
 
-```bash
-nextflow run main_bowtie2.nf --fasta genome.fa -profile docker
-nextflow run main_star.nf --fasta genome.fa --gtf genes.gtf -profile singularity
+# Salmon — using RSEM to generate transcriptome FASTA
+nextflow run main_salmon.nf --fasta genome.fa --gtf genes.gtf --transcriptome_source rsem --outdir results/ --container biocontainers/rsem:1.3.3
+
+# Kallisto — genome index only
+nextflow run main_kallisto.nf --fasta genome.fa --outdir results/ --container biocontainers/kallisto:0.50.1
+
+# Kallisto — genome + transcriptome index
+nextflow run main_kallisto.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container biocontainers/kallisto:0.50.1
+
+# RSEM
+nextflow run main_rsem.nf --fasta transcriptome.fa --outdir results/ --container biocontainers/rsem:1.3.3
+
+# Bismark (bowtie2 backend)
+nextflow run main_bismark.nf --fasta genome.fa --aligner bowtie2 --outdir results/ --container biocontainers/bismark:0.24.0
 ```
 
 ## Testing
 
-Tests use the same input files as [nf-core/modules](https://github.com/nf-core/modules) (from [nf-core/test-datasets](https://github.com/nf-core/test-datasets), branch `modules`), pulled via HTTP at runtime.
+Tests use nf-core test data from [nf-core/test-datasets](https://github.com/nf-core/test-datasets) (branch `modules`), pulled via HTTP at runtime.
 
-**Run the test suite (requires [nf-test](https://www.nf-test.com/)):**
+**Run all tests (requires [nf-test](https://www.nf-test.com/)):**
 
 ```bash
-nextflow plugin add nf-test   # one-time
-./scripts/run_tests.sh
+nf-test test
 ```
 
 Run only stub tests (no real indexing, fast; no Docker needed):
 
 ```bash
-nf-test test tests/workflows --tag stub
+nf-test test --tag stub
 ```
 
-Full tests (real indexing) require Docker or Conda so the tools are available:
-
-```bash
-nf-test test tests/workflows --profile docker
-```
-
-Run a single workflow’s tests:
+Run a single workflow's tests:
 
 ```bash
 nf-test test tests/workflows/main_bowtie2.nf.test
 ```
 
-**Quick run with Nextflow (no nf-test):** use the `test` profile so `--fasta` and `--gtf` point at nf-core test data:
+Update snapshots after intentional behavior changes:
 
 ```bash
-nextflow run main_bowtie2.nf -profile test -stub --outdir results/test
+nf-test test --update-snapshot
 ```
-
-Test data URLs are defined in `tests/config/test_data.config`.
 
 ## Project structure
 
-- `main_<tool>.nf` – Entrypoints; each defines a workflow that calls the matching nf-core module.
-- `workflows/<tool>.nf` – Workflow definitions that include and run the nf-core module.
-- `modules/nf-core/modules/` – nf-core modules (created by `install_modules.sh`).
-- `tests/config/` – Test config and nf-core test data URLs.
-- `tests/workflows/` – nf-test workflow tests (one `*.nf.test` per entrypoint).
+```
+main_<tool>.nf           # Entrypoints — parameter validation + workflow call
+workflows/<tool>.nf      # Workflow definitions
+workflows/make_transcriptome.nf  # Shared subworkflow for transcriptome FASTA generation
+modules/<tool>*.nf       # Process definitions (one or more per tool)
+modules/publish_fasta.nf # Shared: publish genome.fasta.gz
+modules/publish_gtf.nf   # Shared: publish genome.gtf
+modules/gffread.nf       # Shared: transcriptome extraction via gffread
+modules/rsem_transcript_fasta.nf  # Shared: transcriptome extraction via RSEM
+assets/extra.fasta       # Empty placeholder used as default for --extra_fasta (Salmon)
+tests/config/            # Test config and nf-core test data URLs
+tests/workflows/         # nf-test workflow tests (one *.nf.test per entrypoint)
+```
 
-## License
+## Maintaining this documentation
 
-See the nf-core module licenses (Bowtie2: GPL-3.0, STAR: MIT, Bismark: GPL-3.0, etc.).
+**When you change any workflow or module, update the corresponding section in this README.**
+
+Specifically:
+- Adding or removing a parameter → update the Parameters table for that tool
+- Changing a processing step → update the Processing steps list for that tool
+- Adding or removing an output file → update the Outputs table for that tool
+- Adding a new tool → add a new subsection following the existing format
+- Changing shared behavior (PUBLISH_FASTA, PUBLISH_GTF, transcriptome generation) → update the [Shared behavior](#shared-behavior) section
