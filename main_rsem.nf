@@ -1,6 +1,6 @@
 /*
  * Entrypoint: Build RSEM reference index.
- * Usage: nextflow run main_rsem.nf --fasta /path/to/genome.fa [--outdir ./results]
+ * Usage: nextflow run main_rsem.nf --fasta /path/to/genome.fa --gtf /path/to/genes.gtf [--outdir ./results]
  */
 
 include { RSEM_INDEX } from './workflows/rsem.nf'
@@ -8,6 +8,9 @@ include { RSEM_INDEX } from './workflows/rsem.nf'
 workflow {
     if (!params.fasta) {
         exit 1, "Required parameter: --fasta (genome FASTA file)"
+    }
+    if (!params.gtf) {
+        exit 1, "Required parameter: --gtf (gene annotation GTF file)"
     }
     if (!params.outdir) {
         exit 1, "Required parameter: --outdir (output directory)"

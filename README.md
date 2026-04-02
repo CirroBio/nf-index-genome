@@ -288,21 +288,20 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 **Entrypoint:** `main_rsem.nf`  
 **Index type:** RSEM reference (`rsem_index/` directory)
 
-**Note:** This workflow does not accept a GTF for the RSEM reference build — the GTF is published if provided but not used for indexing. To pass a GTF to `rsem-prepare-reference`, use `--rsem_extra_args '--gtf path/to/genes.gtf'`.
-
 #### Parameters
 
 | Parameter | Required | Description |
 |---|---|---|
-| `--fasta` | yes | Genome or transcriptome FASTA |
-| `--gtf` | no | GTF (published only; not passed to RSEM) |
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | yes | GTF passed to `rsem-prepare-reference --gtf` to define transcript boundaries |
 | `--container` | yes | RSEM container image |
 | `--rsem_extra_args` | no | Extra flags passed to `rsem-prepare-reference` |
 
 #### Processing steps
 
-1. **RSEM reference**: `rsem-prepare-reference <extra_args> <fasta> rsem_index/genome` — log `rsem_prepare_reference.log`
-2. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+1. Decompress GTF if gzipped.
+2. **RSEM reference**: `rsem-prepare-reference --gtf genome.gtf <extra_args> <fasta> rsem_index/genome` — log `rsem_prepare_reference.log`
+3. `PUBLISH_FASTA` and `PUBLISH_GTF`
 
 #### Outputs
 
@@ -310,7 +309,7 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 |---|---|
 | `rsem_index/` (directory: `genome.grp`, `genome.ti`, `genome.transcripts.fa`, etc.) | always |
 | `genome.fasta.gz` | always |
-| `genome.gtf` | if `--gtf` |
+| `genome.gtf` | always (GTF is required) |
 | `rsem_prepare_reference.log` | always |
 | `versions.txt` | always |
 
