@@ -72,22 +72,24 @@ The container for gffread is set separately via `--gffread_container` (default: 
 
 #### Processing steps
 
-1. **Genome index** (always): `bowtie2-build --threads N <genome.fasta> genome` — prefix `genome`, log `bowtie2_build_genome.log`
-2. **Transcriptome FASTA** (if `--gtf`): see [Transcriptome FASTA generation](#transcriptome-fasta-generation)
-3. **Transcriptome index** (if `--gtf`): `bowtie2-build --threads N <transcriptome.fasta.gz> transcriptome` — prefix `transcriptome`, log `bowtie2_build_transcriptome.log`
-4. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+Exactly one index is built per run — genome and transcriptome are mutually exclusive:
+
+- **No `--gtf`** → genome index: `bowtie2-build --threads N <genome.fasta> genome` — prefix `genome`, log `bowtie2_build_genome.log`
+- **With `--gtf`** → transcriptome FASTA via [MAKE_TRANSCRIPTOME](#transcriptome-fasta-generation), then transcriptome index: `bowtie2-build --threads N <transcriptome.fasta.gz> transcriptome` — prefix `transcriptome`, log `bowtie2_build_transcriptome.log`
+
+`PUBLISH_FASTA` always runs; `PUBLISH_GTF` runs when `--gtf` is provided.
 
 #### Outputs
 
 | File | Condition |
 |---|---|
-| `genome.1.bt2`, `genome.2.bt2`, … | always |
-| `transcriptome.1.bt2`, `transcriptome.2.bt2`, … | if `--gtf` |
-| `transcriptome.fasta.gz` | if `--gtf` |
+| `genome.1.bt2`, `genome.2.bt2`, … | no `--gtf` |
+| `transcriptome.1.bt2`, `transcriptome.2.bt2`, … | with `--gtf` |
+| `transcriptome.fasta.gz` | with `--gtf` |
 | `genome.fasta.gz` | always |
-| `genome.gtf` | if `--gtf` |
-| `bowtie2_build_genome.log` | always |
-| `bowtie2_build_transcriptome.log` | if `--gtf` |
+| `genome.gtf` | with `--gtf` |
+| `bowtie2_build_genome.log` | no `--gtf` |
+| `bowtie2_build_transcriptome.log` | with `--gtf` |
 | `versions.txt` | always |
 
 ---
