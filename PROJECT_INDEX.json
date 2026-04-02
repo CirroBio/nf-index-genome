@@ -1,0 +1,311 @@
+{
+  "project": {
+    "name": "nf-index-genome",
+    "version": "0.1.0",
+    "author": "Sam Minot, Cirro Bio",
+    "description": "Nextflow DSL2 pipelines for building genome and transcriptome indices using Bowtie2, STAR, Bismark, BWA, HISAT2, Salmon, Kallisto, and RSEM",
+    "nextflow_min_version": "24.04.0",
+    "dsl": 2,
+    "generated": "2026-04-01",
+    "repo_root": "nf-index-genome"
+  },
+  "entrypoints": [
+    {
+      "file": "main_bowtie2.nf",
+      "workflow": "BOWTIE2_INDEX",
+      "required_params": ["fasta", "outdir", "container"],
+      "optional_params": ["gtf", "bowtie2_extra_args"],
+      "output_type": "dna_alignment_index"
+    },
+    {
+      "file": "main_star.nf",
+      "workflow": "STAR_INDEX",
+      "required_params": ["fasta", "gtf", "outdir", "container"],
+      "optional_params": ["star_extra_args"],
+      "output_type": "rna_splice_aware_index"
+    },
+    {
+      "file": "main_bismark.nf",
+      "workflow": "BISMARK_INDEX",
+      "required_params": ["fasta", "outdir", "container", "aligner"],
+      "optional_params": ["gtf", "bismark_extra_args"],
+      "output_type": "bisulfite_index"
+    },
+    {
+      "file": "main_bwa.nf",
+      "workflow": "BWA_INDEX_WORKFLOW",
+      "required_params": ["fasta", "outdir", "container"],
+      "optional_params": ["gtf", "bwa_extra_args"],
+      "output_type": "dna_alignment_index"
+    },
+    {
+      "file": "main_hisat2.nf",
+      "workflow": "HISAT2_INDEX",
+      "required_params": ["fasta", "outdir", "container"],
+      "optional_params": [
+        "hisat2_gtf", "hisat2_ss", "hisat2_exon", "hisat2_snp", "hisat2_haplotype",
+        "hisat2_build_memory", "hisat2_extra_args"
+      ],
+      "output_type": "rna_splice_aware_index"
+    },
+    {
+      "file": "main_salmon.nf",
+      "workflow": "SALMON_INDEX_WF",
+      "required_params": ["fasta", "gtf", "outdir", "container"],
+      "optional_params": ["extra_fasta", "salmon_extra_args", "gffread_container"],
+      "output_type": "transcriptome_index"
+    },
+    {
+      "file": "main_kallisto.nf",
+      "workflow": "KALLISTO_INDEX_WF",
+      "required_params": ["fasta", "gtf", "outdir", "container"],
+      "optional_params": ["kallisto_extra_args", "gffread_container"],
+      "output_type": "transcriptome_index"
+    },
+    {
+      "file": "main_rsem.nf",
+      "workflow": "RSEM_INDEX",
+      "required_params": ["fasta", "outdir", "container"],
+      "optional_params": ["gtf", "rsem_extra_args"],
+      "output_type": "rna_quantification_reference"
+    }
+  ],
+  "workflows": {
+    "bowtie2.nf": {
+      "name": "BOWTIE2_INDEX",
+      "modules": ["BOWTIE2_BUILD", "PUBLISH_FASTA", "PUBLISH_GTF"],
+      "gtf_optional": true
+    },
+    "star.nf": {
+      "name": "STAR_INDEX",
+      "modules": ["STAR_GENOMEGENERATE", "PUBLISH_FASTA"],
+      "gtf_optional": false,
+      "notes": "GTF is decompressed inside the STAR process and also published as genome.gtf"
+    },
+    "bismark.nf": {
+      "name": "BISMARK_INDEX",
+      "modules": ["BISMARK_GENOMEPREPARATION", "PUBLISH_FASTA", "PUBLISH_GTF"],
+      "gtf_optional": true
+    },
+    "bwa.nf": {
+      "name": "BWA_INDEX_WORKFLOW",
+      "modules": ["BWA_INDEX", "PUBLISH_FASTA", "PUBLISH_GTF"],
+      "gtf_optional": true
+    },
+    "hisat2.nf": {
+      "name": "HISAT2_INDEX",
+      "modules": [
+        "HISAT2_BUILD", "PUBLISH_FASTA", "PUBLISH_GTF",
+        "HISAT2_EXTRACT_SPLICE_SITES", "HISAT2_EXTRACT_EXONS",
+        "CREATE_PLACEHOLDER_SS", "CREATE_PLACEHOLDER_EXON",
+        "CREATE_PLACEHOLDER_SNP", "CREATE_PLACEHOLDER_HAPLOTYPE"
+      ],
+      "gtf_optional": true,
+      "notes": "hisat2_gtf triggers auto-extraction of splice sites and exons; mutually exclusive with hisat2_ss and hisat2_exon. Missing annotation inputs use ubuntu:20.04 placeholder processes."
+    },
+    "salmon.nf": {
+      "name": "SALMON_INDEX_WF",
+      "modules": ["GFFREAD", "SALMON_INDEX", "PUBLISH_FASTA", "PUBLISH_GTF"],
+      "gtf_optional": false,
+      "notes": "GFFREAD generates transcriptome from genome+GTF. extra_fasta is concatenated to transcriptome if file size > 2 bytes."
+    },
+    "kallisto.nf": {
+      "name": "KALLISTO_INDEX_WF",
+      "modules": ["GFFREAD", "KALLISTO_INDEX", "PUBLISH_FASTA", "PUBLISH_GTF"],
+      "gtf_optional": false,
+      "notes": "GFFREAD generates transcriptome from genome+GTF. KALLISTO_INDEX also publishes transcriptome.fasta.gz."
+    },
+    "rsem.nf": {
+      "name": "RSEM_INDEX",
+      "modules": ["RSEM_PREPAREREFERENCE", "PUBLISH_FASTA", "PUBLISH_GTF"],
+      "gtf_optional": true
+    }
+  },
+  "modules": {
+    "bowtie2_build.nf": {
+      "process": "BOWTIE2_BUILD",
+      "inputs": ["fasta"],
+      "outputs": ["*"],
+      "container": "params.container",
+      "tool_cmd": "bowtie2-build --threads $task.cpus $extra_args $fasta genome",
+      "extra_args_param": "bowtie2_extra_args",
+      "log_file": "bowtie2_build.log"
+    },
+    "star_genomegenerate.nf": {
+      "process": "STAR_GENOMEGENERATE",
+      "inputs": ["fasta", "gtf"],
+      "outputs": ["*"],
+      "container": "params.container",
+      "tool_cmd": "STAR --runMode genomeGenerate --genomeDir ./ --genomeFastaFiles $fasta",
+      "extra_args_param": "star_extra_args",
+      "log_file": "star_genomegenerate.log",
+      "notes": "GTF decompressed in-process; genome.gtf published alongside index"
+    },
+    "bismark_genomepreparation.nf": {
+      "process": "BISMARK_GENOMEPREPARATION",
+      "inputs": ["genome/"],
+      "outputs": ["genome/", "*"],
+      "container": "params.container",
+      "tool_cmd": "bismark_genome_preparation --${params.aligner} --parallel ${task.cpus} --genomic_composition $extra_args genome/",
+      "extra_args_param": "bismark_extra_args",
+      "log_file": "bismark_genome_preparation.log"
+    },
+    "bwa_index.nf": {
+      "process": "BWA_INDEX",
+      "inputs": ["fasta"],
+      "outputs": ["*"],
+      "container": "params.container",
+      "tool_cmd": "bwa index -p genome $extra_args $fasta",
+      "extra_args_param": "bwa_extra_args",
+      "log_file": "bwa_index.log"
+    },
+    "hisat2_build.nf": {
+      "process": "HISAT2_BUILD",
+      "inputs": ["fasta", "ss", "exon", "snp", "haplotype"],
+      "outputs": ["*"],
+      "container": "params.container",
+      "tool_cmd": "hisat2-build -p ${task.cpus} [optional flags] ${fasta} genome",
+      "extra_args_param": "hisat2_extra_args",
+      "log_file": "hisat2_build.log",
+      "notes": "Empty files for ss/exon/snp/haplotype inputs are treated as absent (size check)"
+    },
+    "salmon_index.nf": {
+      "process": "SALMON_INDEX",
+      "inputs": ["transcriptome", "additional_fasta"],
+      "outputs": ["*"],
+      "container": "params.container",
+      "tool_cmd": "salmon index -t $salmon_input -i salmon_index $extra_args",
+      "extra_args_param": "salmon_extra_args",
+      "log_file": "salmon_index.log",
+      "notes": "additional_fasta (extra_fasta) concatenated only if file size > 2 bytes. Has stub block.",
+      "has_stub": true
+    },
+    "kallisto_index.nf": {
+      "process": "KALLISTO_INDEX",
+      "inputs": ["transcriptome"],
+      "outputs": ["*"],
+      "container": "params.container",
+      "tool_cmd": "kallisto index -i kallisto_index.idx $extra_args $transcriptome",
+      "extra_args_param": "kallisto_extra_args",
+      "log_file": "kallisto_index.log",
+      "notes": "Also publishes transcriptome.fasta.gz (compressed copy of transcriptome input)"
+    },
+    "rsem_preparereference.nf": {
+      "process": "RSEM_PREPAREREFERENCE",
+      "inputs": ["fasta"],
+      "outputs": ["rsem_index", "*"],
+      "container": "params.container",
+      "tool_cmd": "rsem-prepare-reference $extra_args $fasta rsem_index/genome",
+      "extra_args_param": "rsem_extra_args",
+      "log_file": "rsem_prepare_reference.log"
+    },
+    "gffread.nf": {
+      "process": "GFFREAD",
+      "inputs": ["genome", "gtf"],
+      "outputs": ["transcriptome.fasta.gz"],
+      "emit": "transcriptome",
+      "container": "params.gffread_container",
+      "tool_cmd": "gffread genome.gtf -g genome.fasta -w transcriptome.fasta",
+      "publishDir": false,
+      "has_stub": true,
+      "notes": "Intermediate process; outputs not published to outdir"
+    },
+    "publish_fasta.nf": {
+      "process": "PUBLISH_FASTA",
+      "inputs": ["fasta"],
+      "outputs": ["genome.fasta.gz"],
+      "container": "ubuntu:20.04",
+      "publishDir": "params.outdir",
+      "publishPattern": "genome.fasta.gz",
+      "has_stub": true
+    },
+    "publish_gtf.nf": {
+      "process": "PUBLISH_GTF",
+      "inputs": ["gtf"],
+      "outputs": ["genome.gtf"],
+      "container": "ubuntu:20.04",
+      "publishDir": "params.outdir",
+      "publishPattern": "genome.gtf",
+      "has_stub": true
+    }
+  },
+  "params_schema": {
+    "universal": {
+      "fasta": {"type": "string", "required": true, "description": "Reference genome FASTA (plain or .gz)"},
+      "gtf": {"type": "string", "required": "tool-dependent", "description": "Gene annotation GTF (plain or .gz). Required: STAR, Salmon, Kallisto. Optional: others."},
+      "outdir": {"type": "string", "default": "./results", "required": true},
+      "container": {"type": "string", "required": true, "description": "Docker/Singularity image for the index tool"}
+    },
+    "tool_specific": {
+      "aligner": {"type": "string", "tools": ["bismark"], "required_for": "bismark", "example": "bowtie2"},
+      "hisat2_gtf": {"type": "string", "tools": ["hisat2"], "description": "GTF for auto-extraction of splice sites and exons"},
+      "hisat2_ss": {"type": "string", "tools": ["hisat2"], "description": "Pre-computed splice sites file (.ss)"},
+      "hisat2_exon": {"type": "string", "tools": ["hisat2"], "description": "Pre-computed exon file (.exon)"},
+      "hisat2_snp": {"type": "string", "tools": ["hisat2"], "description": "SNP file (.snp)"},
+      "hisat2_haplotype": {"type": "string", "tools": ["hisat2"], "description": "Haplotype file (.haplotype)"},
+      "hisat2_build_memory": {"type": "string", "default": "16 GB", "tools": ["hisat2"]},
+      "extra_fasta": {"type": "string", "default": "$projectDir/assets/extra.fasta", "tools": ["salmon"], "description": "Extra FASTA appended to transcriptome before Salmon indexing"},
+      "gffread_container": {"type": "string", "default": "quay.io/biocontainers/gffread:0.12.7--h077b44d_6", "tools": ["salmon", "kallisto"]}
+    },
+    "extra_args": {
+      "bismark_extra_args": {"default": "", "tools": ["bismark"]},
+      "bwa_extra_args": {"default": "", "tools": ["bwa"]},
+      "bowtie2_extra_args": {"default": "", "tools": ["bowtie2"]},
+      "hisat2_extra_args": {"default": "", "tools": ["hisat2"]},
+      "star_extra_args": {"default": "", "tools": ["star"]},
+      "salmon_extra_args": {"default": "", "tools": ["salmon"]},
+      "kallisto_extra_args": {"default": "", "tools": ["kallisto"]},
+      "rsem_extra_args": {"default": "", "tools": ["rsem"]}
+    }
+  },
+  "testing": {
+    "framework": "nf-test",
+    "config": "tests/config/nextflow.config",
+    "tests_dir": "tests/workflows",
+    "work_dir": ".nf-test",
+    "work_dir_env_override": "NFT_WORKDIR",
+    "test_data_source": "https://raw.githubusercontent.com/nf-core/test-datasets/modules/data/",
+    "test_genomes": {
+      "sarscov2": {
+        "fasta": "genomics/sarscov2/genome/genome.fasta",
+        "gtf": "genomics/sarscov2/genome/genome.gtf",
+        "used_by": ["bowtie2", "bismark", "bwa", "hisat2", "salmon", "kallisto", "rsem"]
+      },
+      "homo_sapiens": {
+        "fasta": "genomics/homo_sapiens/genome/genome.fasta",
+        "gtf": "genomics/homo_sapiens/genome/genome.gtf",
+        "used_by": ["star"]
+      }
+    },
+    "test_types": {
+      "stub": {"tag": "stub", "options": "-stub", "requires_docker": false},
+      "full": {"requires_docker": true}
+    },
+    "run_commands": {
+      "all": "./scripts/run_tests.sh",
+      "stub_only": "nf-test test tests/workflows --tag stub",
+      "docker": "nf-test test tests/workflows --profile docker",
+      "single": "nf-test test tests/workflows/main_<tool>.nf.test"
+    }
+  },
+  "scripts": {
+    "install_modules.sh": {
+      "purpose": "Install/update nf-core modules into modules/ directory",
+      "requires": "nf-core tools (pip install nf-core)",
+      "installs": ["bowtie2/build", "star/genomegenerate", "bismark/genomepreparation", "bwa/index", "hisat2/build"],
+      "note": "Custom modules (salmon, kallisto, rsem, gffread, publish_fasta, publish_gtf) are not managed by this script"
+    },
+    "run_tests.sh": {
+      "purpose": "Wrapper around nf-test test tests/workflows",
+      "accepts": "any nf-test options (e.g. --tag, --profile)"
+    }
+  },
+  "assets": {
+    "extra.fasta": {
+      "path": "assets/extra.fasta",
+      "purpose": "Optional extra sequences (e.g. spike-ins) appended to transcriptome before Salmon indexing",
+      "default_content": "empty placeholder",
+      "controlled_by": "params.extra_fasta"
+    }
+  }
+}
