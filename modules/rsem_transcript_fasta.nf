@@ -1,5 +1,6 @@
 process RSEM_TRANSCRIPT_FASTA {
     tag "$fasta"
+    publishDir params.outdir, mode: 'copy', pattern: "genome.gtf"
 
     container "${params.rsem_container}"
 

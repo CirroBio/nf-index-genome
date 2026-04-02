@@ -1,5 +1,6 @@
 process GFFREAD {
     tag "$genome"
+    publishDir params.outdir, mode: 'copy', pattern: "genome.gtf"
 
     container "${params.gffread_container}"
 
