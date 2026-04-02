@@ -1,7 +1,7 @@
 process RSEM_TRANSCRIPT_FASTA {
     tag "$fasta"
 
-    container "${params.container}"
+    container "${params.rsem_container}"
 
     input:
     path fasta
