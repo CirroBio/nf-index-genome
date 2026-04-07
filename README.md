@@ -125,6 +125,39 @@ Exactly one index is built per run — genome and transcriptome are mutually exc
 
 ---
 
+### bwa-mem2
+
+**Entrypoint:** `main_bwamem2.nf`  
+**Index type:** Short-read DNA alignment index (faster successor to BWA)
+
+bwa-mem2 is a drop-in replacement for BWA-MEM with identical usage but significantly faster indexing and alignment through SIMD acceleration. The index requires approximately 28N GB of memory where N is the size of the reference sequence in GB.
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | no | GTF (published only; not used for indexing) |
+| `--container` | yes | bwa-mem2 container image |
+| `--bwamem2_extra_args` | no | Extra flags passed to `bwa-mem2 index` |
+
+#### Processing steps
+
+1. **Genome index**: `bwa-mem2 index -p genome <genome.fasta>` — prefix `genome`, log `bwamem2_index.log`
+2. `PUBLISH_FASTA` and (if `--gtf`) `PUBLISH_GTF`
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `genome.0123`, `genome.amb`, `genome.ann`, `genome.bwt.2bit.64`, `genome.pac` | always |
+| `genome.fasta.gz` | always |
+| `genome.gtf` | if `--gtf` |
+| `bwamem2_index.log` | always |
+| `versions.txt` | always |
+
+---
+
 ### HISAT2
 
 **Entrypoint:** `main_hisat2.nf`  
@@ -373,6 +406,9 @@ nextflow run main_bowtie2.nf --fasta genome.fa --gtf genes.gtf --outdir results/
 
 # BWA
 nextflow run main_bwa.nf --fasta genome.fa --outdir results/ --container biocontainers/bwa:0.7.17
+
+# bwa-mem2
+nextflow run main_bwamem2.nf --fasta genome.fa --outdir results/ --container biocontainers/bwa-mem2:2.2.1
 
 # HISAT2 — splice-aware (GTF auto-extracts splice sites and exons)
 nextflow run main_hisat2.nf --fasta genome.fa --hisat2_gtf genes.gtf --outdir results/ --container biocontainers/hisat2:2.2.1
