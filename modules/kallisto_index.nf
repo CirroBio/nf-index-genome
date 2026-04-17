@@ -13,7 +13,9 @@ process KALLISTO_INDEX_GENOME {
 
     script:
     def extra_args = params.kallisto_extra_args ?: ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Build the Kallisto genome index and write it to genome.idx
     kallisto index -i genome.idx $extra_args $fasta 2>&1 | tee kallisto_index_genome.log
 
@@ -37,7 +39,9 @@ process KALLISTO_INDEX_TRANSCRIPTOME {
 
     script:
     def extra_args = params.kallisto_extra_args ?: ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Build the Kallisto transcriptome index and write it to transcriptome.idx
     kallisto index -i transcriptome.idx $extra_args $transcriptome 2>&1 | tee kallisto_index_transcriptome.log
 

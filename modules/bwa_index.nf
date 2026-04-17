@@ -13,7 +13,9 @@ process BWA_INDEX {
 
     script:
     def extra_args = params.bwa_extra_args ?: ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Build the BWA genome index; all output files share the prefix 'genome'
     bwa index -p genome $extra_args $fasta 2>&1 | tee bwa_index.log
 

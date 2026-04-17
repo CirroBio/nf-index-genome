@@ -17,7 +17,9 @@ process SALMON_INDEX {
     def extra_args = params.salmon_extra_args ?: ""
     def has_extra   = additional_fasta.size() > 2
     def has_genome  = genome_fasta.size()     > 2
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Decompress the transcriptome FASTA — Salmon requires an uncompressed input
     gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcripts.fasta.tmp || cp $transcriptome transcripts.fasta.tmp
     mv transcripts.fasta.tmp transcripts.fasta

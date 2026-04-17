@@ -12,7 +12,9 @@ process RSEM_TRANSCRIPT_FASTA {
     path "transcriptome.fasta.gz", emit: transcriptome
 
     script:
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Decompress the genome FASTA if gzipped — rsem-prepare-reference requires an uncompressed input
     gzip -t $fasta 2>/dev/null && gzip -cd $fasta > genome.fasta.tmp || cp $fasta genome.fasta.tmp
     mv genome.fasta.tmp genome.fasta

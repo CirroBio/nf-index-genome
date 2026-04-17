@@ -15,7 +15,9 @@ process RSEM_PREPAREREFERENCE {
 
     script:
     def extra_args = params.rsem_extra_args ?: ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Decompress the GTF if gzipped — rsem-prepare-reference requires an uncompressed annotation file
     gzip -t $gtf 2>/dev/null && gzip -cd $gtf > genome.gtf.tmp || cp $gtf genome.gtf.tmp
     mv genome.gtf.tmp genome.gtf

@@ -13,7 +13,9 @@ process BOWTIE2_BUILD {
 
     script:
     def extra_args = params.bowtie2_extra_args ?: ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Build the Bowtie2 genome index; all output files share the prefix 'genome'
     bowtie2-build --threads $task.cpus $extra_args $fasta genome 2>&1 | tee bowtie2_build_genome.log
 

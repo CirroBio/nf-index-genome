@@ -13,7 +13,9 @@ process BWAMEM2_INDEX {
 
     script:
     def extra_args = params.bwamem2_extra_args ?: ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Build the bwa-mem2 genome index; all output files share the prefix 'genome'
     bwa-mem2 index -p genome $extra_args $fasta 2>&1 | tee bwamem2_index.log
 

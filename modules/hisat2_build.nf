@@ -21,7 +21,9 @@ process HISAT2_BUILD {
     def exon_arg      = exon.size()      > 0 ? "--exon ${exon}"           : ""
     def snp_arg       = snp.size()       > 0 ? "--snp ${snp}"             : ""
     def haplotype_arg = haplotype.size() > 0 ? "--haplotype ${haplotype}" : ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Build the HISAT2 genome index; all output files share the prefix 'genome'
     # Splice site, exon, SNP, and haplotype arguments are included only when the
     # corresponding files are provided (non-empty placeholders are skipped automatically)

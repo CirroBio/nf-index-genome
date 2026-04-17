@@ -14,7 +14,9 @@ process STAR_GENOMEGENERATE {
 
     script:
     def extra_args = params.star_extra_args ?: ""
-    """
+    """#!/bin/bash
+    set -euo pipefail
+
     # Decompress the GTF if gzipped and set the splice junction database option
     # STAR requires an uncompressed GTF when building a splice-aware index
     if [ -s "$gtf" ]; then
