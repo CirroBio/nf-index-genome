@@ -31,7 +31,7 @@ Every workflow publishes the following files regardless of other options:
 
 | File | Source |
 |---|---|
-| `genome.fasta.gz` | `PUBLISH_FASTA` — copies input FASTA, compressing if needed |
+| `genome.fasta.gz` | `PUBLISH_FASTA` — re-compresses the input FASTA with bgzip (BGZF), so it can be indexed by htslib-based tools |
 | `versions.txt` | Written by each indexing process |
 
 When `--gtf` is provided, all workflows (except STAR, which handles this internally) additionally publish:
@@ -50,6 +50,8 @@ Three workflows (Bowtie2, Kallisto, Salmon) build a transcriptome FASTA from the
 | `rsem` | rsem-prepare-reference | `rsem-prepare-reference --gtf genome.gtf genome.fasta rsem_ref/genome` — produces `rsem_ref/genome.transcripts.fa`; the standard approach for eukaryotic annotations |
 
 The container for gffread is set separately via `--gffread_container` (default: `quay.io/biocontainers/gffread:0.12.7--h077b44d_6`). When `--transcriptome_source rsem`, `--container` must point to an RSEM image.
+
+Both tools emit an uncompressed transcript FASTA, which `BGZIP_TRANSCRIPTOME` then bgzip-compresses (BGZF) to the `transcriptome.fasta.gz` consumed and published by the downstream index step. bgzip runs in the htslib container set via `--bgzip_container` (default: `quay.io/biocontainers/htslib:1.21--h566b1c6_1`), which is also used by `PUBLISH_FASTA`.
 
 ---
 
