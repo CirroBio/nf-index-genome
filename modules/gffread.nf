@@ -9,7 +9,7 @@ process GFFREAD {
     path gtf
 
     output:
-    path "transcriptome.fasta.gz", emit: transcriptome
+    path "transcriptome.fasta", emit: transcriptome
 
     script:
     """#!/bin/bash
@@ -25,12 +25,10 @@ process GFFREAD {
 
     # Extract transcript sequences from the genome using the coordinates in the GTF
     # The -w flag writes spliced exon sequences (one entry per transcript)
+    # Emitted uncompressed; MAKE_TRANSCRIPTOME bgzip-compresses it downstream
     gffread genome.gtf -g genome.fasta -w transcriptome.fasta
-
-    # Compress the transcript FASTA for consistent downstream handling
-    gzip transcriptome.fasta
     """
 
     stub:
-    "touch transcriptome.fasta.gz"
+    "touch transcriptome.fasta"
 }

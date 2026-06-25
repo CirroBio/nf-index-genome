@@ -1,7 +1,7 @@
 process PUBLISH_FASTA {
     publishDir params.outdir, mode: 'copy', pattern: "genome.fasta.gz"
 
-    container "ubuntu:20.04"
+    container "${params.bgzip_container}"
 
     input:
     path fasta
@@ -13,9 +13,13 @@ process PUBLISH_FASTA {
     """#!/bin/bash
     set -euo pipefail
 
-    # Publish the genome FASTA with the canonical filename genome.fasta.gz
-    # If the input is already gzipped, copy it directly; otherwise compress it first
-    gzip -t $fasta 2>/dev/null && cp $fasta genome.fasta.gz || gzip -c $fasta > genome.fasta.gz
+    # Publish the genome FASTA as genome.fasta.gz, always bgzip (BGZF) compressed.
+    # bgzip output is valid gzip, so decompress any gzipped input first, then re-compress.
+    if gzip -t $fasta 2>/dev/null; then
+        gzip -dc $fasta | bgzip -c > genome.fasta.gz
+    else
+        bgzip -c $fasta > genome.fasta.gz
+    fi
     """
 
     stub:

@@ -9,7 +9,7 @@ process RSEM_TRANSCRIPT_FASTA {
     path gtf
 
     output:
-    path "transcriptome.fasta.gz", emit: transcriptome
+    path "transcriptome.fasta", emit: transcriptome
 
     script:
     """#!/bin/bash
@@ -28,10 +28,10 @@ process RSEM_TRANSCRIPT_FASTA {
     mkdir -p rsem_ref
     rsem-prepare-reference --gtf genome.gtf --num-threads $task.cpus genome.fasta rsem_ref/genome 2>&1 | tee rsem_transcript_fasta.log
 
-    # Compress the transcript FASTA for consistent downstream handling
-    gzip -c rsem_ref/genome.transcripts.fa > transcriptome.fasta.gz
+    # Emit the transcript FASTA uncompressed; MAKE_TRANSCRIPTOME bgzip-compresses it downstream
+    cp rsem_ref/genome.transcripts.fa transcriptome.fasta
     """
 
     stub:
-    "touch transcriptome.fasta.gz"
+    "touch transcriptome.fasta"
 }

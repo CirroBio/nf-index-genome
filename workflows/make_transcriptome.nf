@@ -5,11 +5,13 @@
  *   'gffread' (default) - use gffread to extract transcript sequences
  *   'rsem'              - use rsem-prepare-reference to extract transcript sequences
  *
- * Both paths emit a transcriptome.fasta.gz output on the 'transcriptome' channel.
+ * Both paths emit an uncompressed transcript FASTA, which BGZIP_TRANSCRIPTOME
+ * then bgzip-compresses to transcriptome.fasta.gz on the 'transcriptome' channel.
  */
 
 include { GFFREAD               } from '../modules/gffread.nf'
 include { RSEM_TRANSCRIPT_FASTA } from '../modules/rsem_transcript_fasta.nf'
+include { BGZIP_TRANSCRIPTOME   } from '../modules/bgzip_transcriptome.nf'
 
 workflow MAKE_TRANSCRIPTOME {
     take:
@@ -25,6 +27,8 @@ workflow MAKE_TRANSCRIPTOME {
         ch_transcriptome = GFFREAD.out.transcriptome
     }
 
+    BGZIP_TRANSCRIPTOME(ch_transcriptome)
+
     emit:
-    transcriptome = ch_transcriptome
+    transcriptome = BGZIP_TRANSCRIPTOME.out.transcriptome
 }
