@@ -20,6 +20,8 @@ process BWA_INDEX {
     bwa index -p genome $extra_args $fasta 2>&1 | tee bwa_index.log
 
     # Record the BWA version used to build this index
-    bwa 2>&1 | head -4 | tail -n 3 > versions.txt
+    # `bwa` with no subcommand prints its banner to stderr and exits 1 (and head closing
+    # the pipe early can SIGPIPE it); that is not a real failure, so swallow the status
+    bwa 2>&1 | head -4 | tail -n 3 > versions.txt || true
     """
 }
