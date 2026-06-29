@@ -31,7 +31,9 @@ Every workflow publishes the following files regardless of other options:
 
 | File | Source |
 |---|---|
-| `genome.fasta.gz` | `PUBLISH_FASTA` — re-compresses the input FASTA with bgzip (BGZF), so it can be indexed by htslib-based tools |
+| `genome.fasta.gz` | `PUBLISH_FASTA` — re-compresses the input FASTA with bgzip (BGZF), so it can be indexed by htslib-based tools, then runs `samtools faidx` on it |
+| `genome.fasta.gz.fai` | `PUBLISH_FASTA` — `samtools faidx` index of the BGZF FASTA |
+| `genome.fasta.gz.gzi` | `PUBLISH_FASTA` — bgzip block index produced by `samtools faidx` |
 | `versions.txt` | Written by each indexing process |
 
 When `--gtf` is provided, all workflows (except STAR, which handles this internally) additionally publish:
@@ -51,7 +53,9 @@ Three workflows (Bowtie2, Kallisto, Salmon) build a transcriptome FASTA from the
 
 The container for gffread is set separately via `--gffread_container` (default: `quay.io/biocontainers/gffread:0.12.7--h077b44d_6`). When `--transcriptome_source rsem`, `--container` must point to an RSEM image.
 
-Both tools emit an uncompressed transcript FASTA, which `BGZIP_TRANSCRIPTOME` then bgzip-compresses (BGZF) to the `transcriptome.fasta.gz` consumed and published by the downstream index step. bgzip runs in the htslib container set via `--bgzip_container` (default: `quay.io/biocontainers/htslib:1.21--h566b1c6_1`), which is also used by `PUBLISH_FASTA`.
+Both tools emit an uncompressed transcript FASTA, which `BGZIP_TRANSCRIPTOME` then bgzip-compresses (BGZF) to the `transcriptome.fasta.gz` consumed and published by the downstream index step. bgzip runs in the htslib container set via `--bgzip_container` (default: `quay.io/biocontainers/htslib:1.21--h566b1c6_1`).
+
+`PUBLISH_FASTA` bgzip-compresses the genome FASTA and then runs `samtools faidx` on it, both in the samtools container set via `--samtools_container` (default: `quay.io/biocontainers/samtools:1.21--h50ea8bc_0`), which also bundles bgzip.
 
 ---
 
@@ -89,6 +93,8 @@ Exactly one index is built per run — genome and transcriptome are mutually exc
 | `transcriptome.1.bt2`, `transcriptome.2.bt2`, … | with `--gtf` |
 | `transcriptome.fasta.gz` | with `--gtf` |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | with `--gtf` |
 | `bowtie2_build_genome.log` | no `--gtf` |
 | `bowtie2_build_transcriptome.log` | with `--gtf` |
@@ -121,6 +127,8 @@ Exactly one index is built per run — genome and transcriptome are mutually exc
 |---|---|
 | `genome.amb`, `genome.ann`, `genome.bwt`, `genome.pac`, `genome.sa` | always |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | if `--gtf` |
 | `bwa_index.log` | always |
 | `versions.txt` | always |
@@ -154,6 +162,8 @@ bwa-mem2 is a drop-in replacement for BWA-MEM with identical usage but significa
 |---|---|
 | `genome.0123`, `genome.amb`, `genome.ann`, `genome.bwt.2bit.64`, `genome.pac` | always |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | if `--gtf` |
 | `bwamem2_index.log` | always |
 | `versions.txt` | always |
@@ -196,6 +206,8 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 |---|---|
 | `genome.1.ht2`, `genome.2.ht2`, … (up to 8) | always |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | if `--hisat2_gtf` |
 | `hisat2_build.log` | always |
 | `versions.txt` | always |
@@ -232,6 +244,8 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 | STAR genome directory files (`Genome`, `SA`, `SAindex`, `chrName.txt`, etc.) | always |
 | `genome.gtf` | always (GTF is required) |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `star_genomegenerate.log` | always |
 | `versions.txt` | always |
 
@@ -274,6 +288,8 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 |---|---|
 | `salmon_index/` (directory with index files) | always |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | always (GTF is required) |
 | `salmon_index.log` | always |
 | `versions.txt` | always |
@@ -313,6 +329,8 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 | `transcriptome.idx` | if `--gtf` |
 | `transcriptome.fasta.gz` | if `--gtf` |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | if `--gtf` |
 | `kallisto_index_genome.log` | always |
 | `kallisto_index_transcriptome.log` | if `--gtf` |
@@ -346,6 +364,8 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 |---|---|
 | `rsem_index/` (directory: `genome.grp`, `genome.ti`, `genome.transcripts.fa`, etc.) | always |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | always (GTF is required) |
 | `rsem_prepare_reference.log` | always |
 | `versions.txt` | always |
@@ -380,6 +400,8 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 | `genome/Bisulfite_Genome/` (CT and GA conversion index files) | always |
 | `genome/` (original FASTA and genome composition file) | always |
 | `genome.fasta.gz` | always |
+| `genome.fasta.gz.fai` | always |
+| `genome.fasta.gz.gzi` | always |
 | `genome.gtf` | if `--gtf` |
 | `bismark_genome_preparation.log` | always |
 | `versions.txt` | always |

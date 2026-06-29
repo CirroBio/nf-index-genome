@@ -1,13 +1,15 @@
 process PUBLISH_FASTA {
-    publishDir params.outdir, mode: 'copy', pattern: "genome.fasta.gz"
+    publishDir params.outdir, mode: 'copy', pattern: "genome.fasta.gz*"
 
-    container "${params.bgzip_container}"
+    container "${params.samtools_container}"
 
     input:
     path fasta
 
     output:
     path "genome.fasta.gz"
+    path "genome.fasta.gz.fai"
+    path "genome.fasta.gz.gzi"
 
     script:
     """#!/bin/bash
@@ -20,8 +22,11 @@ process PUBLISH_FASTA {
     else
         bgzip -c $fasta > genome.fasta.gz
     fi
+
+    # Index the BGZF FASTA, producing genome.fasta.gz.fai and genome.fasta.gz.gzi.
+    samtools faidx genome.fasta.gz
     """
 
     stub:
-    "touch genome.fasta.gz"
+    "touch genome.fasta.gz genome.fasta.gz.fai genome.fasta.gz.gzi"
 }
