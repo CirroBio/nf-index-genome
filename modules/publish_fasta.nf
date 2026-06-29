@@ -1,5 +1,5 @@
 process PUBLISH_FASTA {
-    publishDir params.outdir, mode: 'copy', pattern: "genome.fasta.gz*"
+    publishDir params.outdir, mode: 'copy', pattern: "genome.fasta*"
 
     container "${params.samtools_container}"
 
@@ -7,26 +7,25 @@ process PUBLISH_FASTA {
     path fasta
 
     output:
-    path "genome.fasta.gz"
-    path "genome.fasta.gz.fai"
-    path "genome.fasta.gz.gzi"
+    path "genome.fasta"
+    path "genome.fasta.fai"
 
     script:
     """#!/bin/bash
     set -euo pipefail
 
-    # Publish the genome FASTA as genome.fasta.gz, always bgzip (BGZF) compressed.
-    # bgzip output is valid gzip, so decompress any gzipped input first, then re-compress.
+    # Publish the genome FASTA uncompressed as genome.fasta.
+    # Decompress any gzipped input first; otherwise copy it directly.
     if gzip -t $fasta 2>/dev/null; then
-        gzip -dc $fasta | bgzip -c > genome.fasta.gz
+        gzip -dc $fasta > genome.fasta
     else
-        bgzip -c $fasta > genome.fasta.gz
+        cp $fasta genome.fasta
     fi
 
-    # Index the BGZF FASTA, producing genome.fasta.gz.fai and genome.fasta.gz.gzi.
-    samtools faidx genome.fasta.gz
+    # Index the FASTA, producing genome.fasta.fai.
+    samtools faidx genome.fasta
     """
 
     stub:
-    "touch genome.fasta.gz genome.fasta.gz.fai genome.fasta.gz.gzi"
+    "touch genome.fasta genome.fasta.fai"
 }
