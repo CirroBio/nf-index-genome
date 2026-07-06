@@ -13,3 +13,5 @@
 | Shared behavior changed (PUBLISH_FASTA, PUBLISH_GTF, transcriptome generation) | "Shared behavior" section |
 
 The `workflows/make_transcriptome.nf` subworkflow is shared by Bowtie2, Kallisto, and Salmon — changes there affect all three tools' documentation.
+
+The `workflows/make_gff3.nf` subworkflow (GTF → GFF3, bgzip + tabix) is shared by every tool that publishes an annotation — changes there affect all tools' documentation.

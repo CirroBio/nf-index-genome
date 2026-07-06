@@ -10,6 +10,7 @@ include { MAKE_TRANSCRIPTOME } from './make_transcriptome.nf'
 include { SALMON_INDEX        } from '../modules/salmon_index.nf'
 include { PUBLISH_FASTA       } from '../modules/publish_fasta.nf'
 include { PUBLISH_GTF         } from '../modules/publish_gtf.nf'
+include { MAKE_GFF3           } from './make_gff3.nf'
 
 workflow SALMON_INDEX_WF {
     ch_genome = Channel.fromPath(params.fasta, checkIfExists: true)
@@ -20,4 +21,5 @@ workflow SALMON_INDEX_WF {
     SALMON_INDEX(MAKE_TRANSCRIPTOME.out.transcriptome, ch_extra, ch_genome)
     PUBLISH_FASTA(ch_genome)
     PUBLISH_GTF(ch_gtf)
+    MAKE_GFF3(ch_gtf)
 }

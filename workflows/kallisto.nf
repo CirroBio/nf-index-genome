@@ -11,6 +11,7 @@ include { KALLISTO_INDEX_GENOME      } from '../modules/kallisto_index.nf'
 include { KALLISTO_INDEX_TRANSCRIPTOME } from '../modules/kallisto_index.nf'
 include { PUBLISH_FASTA            } from '../modules/publish_fasta.nf'
 include { PUBLISH_GTF              } from '../modules/publish_gtf.nf'
+include { MAKE_GFF3                } from './make_gff3.nf'
 
 workflow KALLISTO_INDEX_WF {
     ch_genome = Channel.fromPath(params.fasta, checkIfExists: true)
@@ -23,5 +24,6 @@ workflow KALLISTO_INDEX_WF {
         MAKE_TRANSCRIPTOME(ch_genome, ch_gtf)
         KALLISTO_INDEX_TRANSCRIPTOME(MAKE_TRANSCRIPTOME.out.transcriptome)
         PUBLISH_GTF(ch_gtf)
+        MAKE_GFF3(ch_gtf)
     }
 }

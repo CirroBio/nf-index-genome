@@ -10,6 +10,7 @@ include { BOWTIE2_BUILD               } from '../modules/bowtie2_build.nf'
 include { BOWTIE2_BUILD_TRANSCRIPTOME } from '../modules/bowtie2_build.nf'
 include { PUBLISH_FASTA               } from '../modules/publish_fasta.nf'
 include { PUBLISH_GTF                 } from '../modules/publish_gtf.nf'
+include { MAKE_GFF3                   } from './make_gff3.nf'
 
 workflow BOWTIE2_INDEX {
     ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
@@ -21,6 +22,7 @@ workflow BOWTIE2_INDEX {
         MAKE_TRANSCRIPTOME(ch_fasta, ch_gtf)
         BOWTIE2_BUILD_TRANSCRIPTOME(MAKE_TRANSCRIPTOME.out.transcriptome)
         PUBLISH_GTF(ch_gtf)
+        MAKE_GFF3(ch_gtf)
     } else {
         BOWTIE2_BUILD(ch_fasta)
     }

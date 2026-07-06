@@ -6,6 +6,7 @@
 include { STAR_GENOMEGENERATE } from '../modules/star_genomegenerate.nf'
 include { PUBLISH_FASTA } from '../modules/publish_fasta.nf'
 include { PUBLISH_GTF } from '../modules/publish_gtf.nf'
+include { MAKE_GFF3 } from './make_gff3.nf'
 
 workflow STAR_INDEX {
     ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
@@ -14,4 +15,5 @@ workflow STAR_INDEX {
     STAR_GENOMEGENERATE(ch_fasta, ch_gtf)
     PUBLISH_FASTA(ch_fasta)
     PUBLISH_GTF(ch_gtf)
+    MAKE_GFF3(ch_gtf)
 }

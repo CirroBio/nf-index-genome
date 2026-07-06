@@ -6,6 +6,7 @@
 include { BISMARK_GENOMEPREPARATION } from '../modules/bismark_genomepreparation.nf'
 include { PUBLISH_FASTA } from '../modules/publish_fasta.nf'
 include { PUBLISH_GTF } from '../modules/publish_gtf.nf'
+include { MAKE_GFF3 } from './make_gff3.nf'
 
 workflow BISMARK_INDEX {
     ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true)
@@ -17,5 +18,6 @@ workflow BISMARK_INDEX {
     if (params.gtf) {
         ch_gtf = Channel.fromPath(params.gtf, checkIfExists: true)
         PUBLISH_GTF(ch_gtf)
+        MAKE_GFF3(ch_gtf)
     }
 }
