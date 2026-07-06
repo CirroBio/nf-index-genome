@@ -33,7 +33,8 @@ process STAR_GENOMEGENERATE {
     # Record the STAR version used to build this index
     STAR --version 2>&1 > versions.txt
 
-    # Copy the decompressed GTF to the output directory with the canonical filename genome.gtf
-    [ -f sjdb.gtf ] && { cp sjdb.gtf genome.gtf.tmp && mv genome.gtf.tmp genome.gtf; } || true
+    # Remove the decompressed splice junction GTF so it is not published;
+    # the canonical GTF is published (bgzip-compressed and tabix-indexed) by PUBLISH_GTF.
+    rm -f sjdb.gtf
     """
 }
