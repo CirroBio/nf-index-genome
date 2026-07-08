@@ -20,11 +20,18 @@ process SALMON_INDEX {
     """#!/bin/bash
     set -euo pipefail
 
-    # Force a locale that is always present in the container — Salmon (C++) throws
-    # "locale::facet::_S_create_c_locale name not valid" if the inherited LC_ALL/LANG
-    # names a locale that is not installed in the image
-    export LC_ALL=C
-    export LANG=C
+    # Salmon hardcodes std::locale("en_US.UTF-8") when writing the index, but the
+    # biocontainer only ships the C/C.utf8 locales, so it aborts with
+    # "locale::facet::_S_create_c_locale name not valid". Setting LC_ALL/LANG does
+    # not help because the name is hardcoded, not read from the environment. Alias
+    # en_US.utf8 to the available C.utf8 in a private LOCPATH so the lookup resolves.
+    # The .locale dir is hidden so it is excluded from the `path "*"` output glob.
+    if [ -d /usr/lib/locale/C.utf8 ]; then
+        locale_dir="\$PWD/.locale"
+        mkdir -p "\$locale_dir/en_US.utf8"
+        cp -r /usr/lib/locale/C.utf8/. "\$locale_dir/en_US.utf8/"
+        export LOCPATH="\$locale_dir"
+    fi
 
     # Decompress the transcriptome FASTA — Salmon requires an uncompressed input
     gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcripts.fasta.tmp || cp $transcriptome transcripts.fasta.tmp
