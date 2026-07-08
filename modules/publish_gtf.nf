@@ -1,5 +1,5 @@
 process PUBLISH_GTF {
-    publishDir params.outdir, mode: 'copy', pattern: "genome.gtf.gz*"
+    publishDir params.outdir, mode: 'copy', pattern: "genome.gtf{,.gz,.gz.tbi}"
 
     container "${params.bgzip_container}"
 
@@ -7,6 +7,7 @@ process PUBLISH_GTF {
     path gtf
 
     output:
+    path "genome.gtf"
     path "genome.gtf.gz"
     path "genome.gtf.gz.tbi"
 
@@ -16,20 +17,23 @@ process PUBLISH_GTF {
 
     # Decompress any gzipped input first; otherwise use it directly.
     if gzip -t $gtf 2>/dev/null; then
-        gzip -dc $gtf > genome.gtf
+        gzip -dc $gtf > input.gtf
     else
-        cp $gtf genome.gtf
+        cp $gtf input.gtf
     fi
 
     # tabix requires the records sorted by sequence name and start position.
-    # Keep header lines up front, then sort the feature lines.
-    (grep '^#' genome.gtf || true; { grep -v '^#' genome.gtf || true; } | sort -k1,1 -k4,4n) \
-        | bgzip -c > genome.gtf.gz
+    # Keep header lines up front, then sort the feature lines. This sorted,
+    # uncompressed GTF is published alongside the bgzip/tabix-indexed copy.
+    (grep '^#' input.gtf || true; { grep -v '^#' input.gtf || true; } | sort -k1,1 -k4,4n) \
+        > genome.gtf
+
+    bgzip -c genome.gtf > genome.gtf.gz
 
     # Index the bgzip-compressed GTF, producing genome.gtf.gz.tbi.
     tabix -p gff genome.gtf.gz
     """
 
     stub:
-    "touch genome.gtf.gz genome.gtf.gz.tbi"
+    "touch genome.gtf genome.gtf.gz genome.gtf.gz.tbi"
 }
