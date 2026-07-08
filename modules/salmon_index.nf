@@ -20,6 +20,12 @@ process SALMON_INDEX {
     """#!/bin/bash
     set -euo pipefail
 
+    # Force a locale that is always present in the container — Salmon (C++) throws
+    # "locale::facet::_S_create_c_locale name not valid" if the inherited LC_ALL/LANG
+    # names a locale that is not installed in the image
+    export LC_ALL=C
+    export LANG=C
+
     # Decompress the transcriptome FASTA — Salmon requires an uncompressed input
     gzip -t $transcriptome 2>/dev/null && gzip -cd $transcriptome > transcripts.fasta.tmp || cp $transcriptome transcripts.fasta.tmp
     mv transcripts.fasta.tmp transcripts.fasta
