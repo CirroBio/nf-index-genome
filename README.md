@@ -314,6 +314,45 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 
 ---
 
+### alevin-fry (simpleaf)
+
+**Entrypoint:** `main_alevinfry.nf`  
+**Index type:** Spliced+intron (splici) decoy-aware reference index built by `simpleaf index` (piscem indexer by default), with a transcript-to-gene map for alevin-fry USA-mode quantification (`simpleaf/` directory)
+
+This is the alevin-fry counterpart to the [Salmon](#salmon) workflow. Unlike bare `salmon index`, `simpleaf` constructs the splici reference and the t2g map internally from the genome and GTF (via roers), so it does not use the shared [transcriptome generation](#transcriptome-fasta-generation) step.
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | yes | GTF used to build the splici reference |
+| `--container` | yes | simpleaf container image (bundles simpleaf, alevin-fry, piscem, salmon) |
+| `--simpleaf_extra_args` | no | Extra flags passed to `simpleaf index` (e.g. `--use-salmon` to index with salmon instead of piscem) |
+
+#### Processing steps
+
+1. Decompress genome FASTA and GTF if gzipped (roers requires uncompressed inputs).
+2. **Reference index**: `simpleaf index --threads N --fasta genome.fasta --gtf genome.gtf --output simpleaf` — builds `simpleaf/ref/` (splici reference + t2g maps) and `simpleaf/index/` (piscem index).
+3. `PUBLISH_FASTA`, `PUBLISH_GTF`, and `MAKE_GFF3`.
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `simpleaf/index/` (piscem index files) | always |
+| `simpleaf/ref/` (splici reference FASTA + `t2g.tsv`/`t2g_3col.tsv`) | always |
+| `genome.fasta` | always |
+| `genome.fasta.fai` | always |
+| `genome.gtf` | always (GTF is required) |
+| `genome.gtf.gz` | always (GTF is required) |
+| `genome.gtf.gz.tbi` | always (GTF is required) |
+| `genome.gff3.gz` | always (GTF is required) |
+| `genome.gff3.gz.tbi` | always (GTF is required) |
+| `versions.txt` | always |
+
+---
+
 ### Kallisto
 
 **Entrypoint:** `main_kallisto.nf`  
@@ -355,6 +394,96 @@ HISAT2 uses a separate GTF parameter (`--hisat2_gtf`) from the generic `--gtf` u
 | `genome.gff3.gz.tbi` | if `--gtf` |
 | `kallisto_index_genome.log` | always |
 | `kallisto_index_transcriptome.log` | if `--gtf` |
+| `versions.txt` | always |
+
+---
+
+### kallisto | bustools (kb)
+
+**Entrypoint:** `main_kb.nf`  
+**Index type:** kallisto pseudoalignment index plus a transcript-to-gene map and cDNA FASTA built by `kb ref` (kb-python), for single-cell BUStools quantification
+
+This is the kallisto|bustools counterpart to the [Kallisto](#kallisto) workflow. Unlike bare `kallisto index`, `kb ref` also emits the `t2g.txt` map (and, in RNA-velocity mode, intron references) that BUStools requires. kb-python reads gzipped inputs directly, so no decompression step is needed.
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA |
+| `--gtf` | yes | GTF used to extract cDNA (and intron) sequences |
+| `--container` | yes | kb-python container image |
+| `--kb_workflow` | no | `standard` (default) or `nac`/`lamanno` to additionally build intron references for RNA-velocity |
+| `--kb_extra_args` | no | Extra flags passed to `kb ref` |
+
+#### Processing steps
+
+1. **Reference** (`standard`): `kb ref -i index.idx -g t2g.txt -f1 cdna.fa --workflow standard <fasta> <gtf>` — log `kb_ref.log`.
+2. **Reference** (`nac`/`lamanno`): additionally emits `-f2 intron.fa -c1 cdna_t2c.txt -c2 intron_t2c.txt`.
+3. `PUBLISH_FASTA`, `PUBLISH_GTF`, and `MAKE_GFF3`.
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `index.idx` | always |
+| `t2g.txt` | always |
+| `cdna.fa` | always |
+| `intron.fa` | if `--kb_workflow nac`/`lamanno` |
+| `cdna_t2c.txt` | if `--kb_workflow nac`/`lamanno` |
+| `intron_t2c.txt` | if `--kb_workflow nac`/`lamanno` |
+| `genome.fasta` | always |
+| `genome.fasta.fai` | always |
+| `genome.gtf` | always (GTF is required) |
+| `genome.gtf.gz` | always (GTF is required) |
+| `genome.gtf.gz.tbi` | always (GTF is required) |
+| `genome.gff3.gz` | always (GTF is required) |
+| `genome.gff3.gz.tbi` | always (GTF is required) |
+| `kb_ref.log` | always |
+| `versions.txt` | always |
+
+---
+
+### Cell Ranger
+
+**Entrypoint:** `main_cellranger.nf`  
+**Index type:** 10x Genomics reference package built by `cellranger mkref` (runs STAR genomeGenerate internally); directory named by `--cellranger_reference_name`
+
+> Cell Ranger is proprietary 10x Genomics software. This workflow uses a public prebuilt image (`quay.io/cumulus/cellranger`, maintained by the Cumulus project); its use is subject to the 10x Genomics End User License Agreement. It does not support Conda.
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA (gzipped or uncompressed) |
+| `--gtf` | yes | Gene annotation GTF (gzipped or uncompressed) |
+| `--container` | yes | Cell Ranger container image (e.g. `quay.io/cumulus/cellranger:10.0.0`) |
+| `--cellranger_reference_name` | no | Output reference directory name (default: `cellranger_reference`) |
+| `--cellranger_mkref_args` | no | Extra flags passed to `cellranger mkref` |
+| `--cellranger_mkgtf_args` | no | If set, filter the GTF with `cellranger mkgtf` first (e.g. `--attribute=gene_biotype:protein_coding`); if empty (default), mkref runs on the GTF as-is |
+
+#### Processing steps
+
+1. If `--cellranger_mkgtf_args` is set: `cellranger mkgtf <gtf> genes.filtered.gtf <args>` — slim the GTF by attribute (the filtered GTF feeds mkref; the original GTF is still published).
+2. Decompress FASTA and GTF if gzipped (mkref requires uncompressed inputs).
+3. **Reference**: `cellranger mkref --genome=<name> --fasta=genome.fasta --genes=<gtf> --localcores=N --localmem=<GiB> --nthreads=N` — produces `<name>/{fasta,genes,star,reference.json}`.
+4. `PUBLISH_FASTA`, `PUBLISH_GTF`, and `MAKE_GFF3`.
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `<cellranger_reference_name>/fasta/genome.fa` (+ `.fai`) | always |
+| `<cellranger_reference_name>/genes/genes.gtf.gz` | always |
+| `<cellranger_reference_name>/star/` (STAR index) | always |
+| `<cellranger_reference_name>/reference.json` | always |
+| `genes.filtered.gtf` | if `--cellranger_mkgtf_args` |
+| `genome.fasta` | always |
+| `genome.fasta.fai` | always |
+| `genome.gtf` | always (GTF is required) |
+| `genome.gtf.gz` | always (GTF is required) |
+| `genome.gtf.gz.tbi` | always (GTF is required) |
+| `genome.gff3.gz` | always (GTF is required) |
+| `genome.gff3.gz.tbi` | always (GTF is required) |
 | `versions.txt` | always |
 
 ---
@@ -473,11 +602,23 @@ nextflow run main_salmon.nf --fasta genome.fa --gtf genes.gtf --outdir results/ 
 # Salmon — using RSEM to generate transcriptome FASTA
 nextflow run main_salmon.nf --fasta genome.fa --gtf genes.gtf --transcriptome_source rsem --outdir results/ --container biocontainers/rsem:1.3.3
 
+# Salmon / alevin-fry — splici reference via simpleaf (piscem index + t2g map)
+nextflow run main_alevinfry.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container quay.io/biocontainers/simpleaf:0.19.5--ha6fb395_0
+
 # Kallisto — genome index only
 nextflow run main_kallisto.nf --fasta genome.fa --outdir results/ --container biocontainers/kallisto:0.50.1
 
 # Kallisto — genome + transcriptome index
 nextflow run main_kallisto.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container biocontainers/kallisto:0.50.1
+
+# kallisto | bustools — kb ref (kallisto index + t2g map for single-cell)
+nextflow run main_kb.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container quay.io/biocontainers/kb-python:0.28.2--pyhdfd78af_2
+
+# kallisto | bustools — RNA-velocity reference (intron references)
+nextflow run main_kb.nf --fasta genome.fa --gtf genes.gtf --kb_workflow nac --outdir results/ --container quay.io/biocontainers/kb-python:0.28.2--pyhdfd78af_2
+
+# Cell Ranger — 10x reference (subject to 10x Genomics EULA)
+nextflow run main_cellranger.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container quay.io/cumulus/cellranger:10.0.0
 
 # RSEM
 nextflow run main_rsem.nf --fasta transcriptome.fa --outdir results/ --container biocontainers/rsem:1.3.3
