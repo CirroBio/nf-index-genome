@@ -488,6 +488,88 @@ This is the kallisto|bustools counterpart to the [Kallisto](#kallisto) workflow.
 
 ---
 
+### Cell Ranger ARC (multiome)
+
+**Entrypoint:** `main_cellrangerarc.nf`  
+**Index type:** 10x multiome (joint ATAC + gene expression) reference package built by `cellranger-arc mkref`
+
+> Cell Ranger ARC is proprietary 10x Genomics software. This workflow uses a public prebuilt image (`quay.io/cumulus/cellranger-arc`); its use is subject to the 10x Genomics End User License Agreement. It does not support Conda. Unlike `cellranger mkref`, `cellranger-arc mkref` validates the GTF strictly (each transcript needs a `transcript` feature row preceding its `exon` rows) — supply a well-formed / filtered GTF.
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA (gzipped or uncompressed) |
+| `--gtf` | yes | Gene annotation GTF (gzipped or uncompressed; must be well-formed) |
+| `--container` | yes | Cell Ranger ARC container image (e.g. `quay.io/cumulus/cellranger-arc:2.0.2`) |
+| `--cellrangerarc_reference_name` | no | Output reference directory name (default: `cellrangerarc_reference`) |
+| `--cellrangerarc_motifs` | no | ATAC TF motifs file (JASPAR format) for peak annotation; default is an empty placeholder (no motifs) |
+| `--cellrangerarc_mkref_args` | no | Extra flags passed to `cellranger-arc mkref` |
+
+#### Processing steps
+
+1. Decompress FASTA and GTF if gzipped (mkref requires uncompressed inputs).
+2. Generate the mkref `config` (organism, genome name, `input_fasta`, `input_gtf`, and `input_motifs` when a non-empty motifs file is supplied).
+3. **Reference**: `cellranger-arc mkref --config=config --nthreads=N` — produces `<name>/{fasta,genes,regions,star,reference.json}`.
+4. `PUBLISH_FASTA`, `PUBLISH_GTF`, and `MAKE_GFF3`.
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `<cellrangerarc_reference_name>/` (`fasta/`, `genes/`, `regions/`, `star/`, `reference.json`) | always |
+| `config` (generated mkref config) | always |
+| `genome.fasta` | always |
+| `genome.fasta.fai` | always |
+| `genome.gtf` | always (GTF is required) |
+| `genome.gtf.gz` | always (GTF is required) |
+| `genome.gtf.gz.tbi` | always (GTF is required) |
+| `genome.gff3.gz` | always (GTF is required) |
+| `genome.gff3.gz.tbi` | always (GTF is required) |
+| `versions.txt` | always |
+
+---
+
+### Cell Ranger V(D)J
+
+**Entrypoint:** `main_cellranger_vdj.nf`  
+**Index type:** 10x immune-profiling V(D)J reference package built by `cellranger mkvdjref`
+
+> Cell Ranger is proprietary 10x Genomics software (image `quay.io/cumulus/cellranger`, subject to the 10x EULA; no Conda). The GTF must contain immunoglobulin/TCR (`IG_*` / `TR_*`) gene segments, or mkvdjref fails with "no V(D)J segments".
+
+#### Parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `--fasta` | yes | Genome FASTA (gzipped or uncompressed) |
+| `--gtf` | yes | Gene annotation GTF containing IG/TR segments |
+| `--container` | yes | Cell Ranger container image (e.g. `quay.io/cumulus/cellranger:10.0.0`) |
+| `--cellranger_vdj_reference_name` | no | Output reference directory name (default: `cellranger_vdj_reference`) |
+| `--cellranger_mkvdjref_args` | no | Extra flags passed to `cellranger mkvdjref` |
+
+#### Processing steps
+
+1. Decompress FASTA and GTF if gzipped (mkvdjref requires uncompressed inputs).
+2. **Reference**: `cellranger mkvdjref --genome=<name> --fasta=genome.fasta --genes=<gtf> --localcores=N --localmem=<GiB>` — extracts V(D)J segments into `<name>/fasta/regions.fa`.
+3. `PUBLISH_FASTA`, `PUBLISH_GTF`, and `MAKE_GFF3`.
+
+#### Outputs
+
+| File | Condition |
+|---|---|
+| `<cellranger_vdj_reference_name>/fasta/regions.fa` (V(D)J segments) | always |
+| `<cellranger_vdj_reference_name>/reference.json` | always |
+| `genome.fasta` | always |
+| `genome.fasta.fai` | always |
+| `genome.gtf` | always (GTF is required) |
+| `genome.gtf.gz` | always (GTF is required) |
+| `genome.gtf.gz.tbi` | always (GTF is required) |
+| `genome.gff3.gz` | always (GTF is required) |
+| `genome.gff3.gz.tbi` | always (GTF is required) |
+| `versions.txt` | always |
+
+---
+
 ### RSEM
 
 **Entrypoint:** `main_rsem.nf`  
@@ -619,6 +701,12 @@ nextflow run main_kb.nf --fasta genome.fa --gtf genes.gtf --kb_workflow nac --ou
 
 # Cell Ranger — 10x reference (subject to 10x Genomics EULA)
 nextflow run main_cellranger.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container quay.io/cumulus/cellranger:10.0.0
+
+# Cell Ranger ARC — multiome (ATAC + GEX) reference; GTF must be well-formed
+nextflow run main_cellrangerarc.nf --fasta genome.fa --gtf genes.gtf --cellrangerarc_motifs motifs.txt --outdir results/ --container quay.io/cumulus/cellranger-arc:2.0.2
+
+# Cell Ranger V(D)J — immune-profiling reference; GTF must contain IG/TR segments
+nextflow run main_cellranger_vdj.nf --fasta genome.fa --gtf genes.gtf --outdir results/ --container quay.io/cumulus/cellranger:10.0.0
 
 # RSEM
 nextflow run main_rsem.nf --fasta transcriptome.fa --outdir results/ --container biocontainers/rsem:1.3.3

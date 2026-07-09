@@ -1,0 +1,49 @@
+/*
+ * Workflow tests for main_cellrangerarc.nf using the nf-core/scrnaseq
+ * cellrangerarc/mkref test data (mouse chr19 genome + filtered GTF + ATAC motifs).
+ * Real runs require the proprietary Cell Ranger ARC image
+ * (e.g. quay.io/cumulus/cellranger-arc:2.0.2), supplied via --container.
+ */
+nextflow_workflow {
+    name "Test workflow main_cellrangerarc"
+    script "../../main_cellrangerarc.nf"
+    config "../config/nextflow.config"
+
+    tag "index"
+    tag "cellrangerarc"
+
+    test("Cell Ranger ARC mkref with nf-core mouse chr19 genome + GTF + motifs - stub") {
+        tag "stub"
+        options "-stub"
+
+        when {
+            params {
+                fasta                 = "${params.modules_testdata_base_path}genomics/mus_musculus/genome/chr19.fa.gz"
+                gtf                   = "${params.modules_testdata_base_path}genomics/mus_musculus/genome/chr19.filtered.gtf.gz"
+                cellrangerarc_motifs  = "${params.modules_testdata_base_path}genomics/homo_sapiens/genome/genome_motifs.txt"
+                outdir                = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert snapshot(workflow.trace.succeeded().size()).match()
+        }
+    }
+
+    test("Cell Ranger ARC mkref with nf-core mouse chr19 genome + GTF + motifs") {
+        when {
+            params {
+                fasta                 = "${params.modules_testdata_base_path}genomics/mus_musculus/genome/chr19.fa.gz"
+                gtf                   = "${params.modules_testdata_base_path}genomics/mus_musculus/genome/chr19.filtered.gtf.gz"
+                cellrangerarc_motifs  = "${params.modules_testdata_base_path}genomics/homo_sapiens/genome/genome_motifs.txt"
+                outdir                = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.trace.succeeded().size() >= 1
+        }
+    }
+}

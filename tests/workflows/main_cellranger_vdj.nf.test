@@ -1,0 +1,48 @@
+/*
+ * Workflow tests for main_cellranger_vdj.nf. Like the nf-core/scrnaseq
+ * cellranger/mkvdjref module test, this uses Ensembl GRCh38 chromosome 22
+ * (which contains the immunoglobulin lambda (IGL) locus) so that mkvdjref finds
+ * V(D)J segments. Real runs require the proprietary Cell Ranger image
+ * (e.g. quay.io/cumulus/cellranger:10.0.0), supplied via --container.
+ */
+nextflow_workflow {
+    name "Test workflow main_cellranger_vdj"
+    script "../../main_cellranger_vdj.nf"
+    config "../config/nextflow.config"
+
+    tag "index"
+    tag "cellranger_vdj"
+
+    test("Cell Ranger mkvdjref with Ensembl GRCh38 chr22 - stub") {
+        tag "stub"
+        options "-stub"
+
+        when {
+            params {
+                fasta  = 'http://ftp.ensembl.org/pub/release-103/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.22.fa.gz'
+                gtf    = 'http://ftp.ensembl.org/pub/release-103/gtf/homo_sapiens/Homo_sapiens.GRCh38.103.gtf.gz'
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert snapshot(workflow.trace.succeeded().size()).match()
+        }
+    }
+
+    test("Cell Ranger mkvdjref with Ensembl GRCh38 chr22") {
+        when {
+            params {
+                fasta  = 'http://ftp.ensembl.org/pub/release-103/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.22.fa.gz'
+                gtf    = 'http://ftp.ensembl.org/pub/release-103/gtf/homo_sapiens/Homo_sapiens.GRCh38.103.gtf.gz'
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.trace.succeeded().size() >= 1
+        }
+    }
+}
